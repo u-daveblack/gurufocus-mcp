@@ -420,7 +420,7 @@ class SummaryScore(BaseModel):
         score += (self.growth_consistency_score / 4) * 15
         score += (self.profitability_score / 10) * 10
         score += (self.valuation_score / 10) * 20
-        return int(round(score))
+        return round(score)
 
 
 class PriceTargets(BaseModel):
