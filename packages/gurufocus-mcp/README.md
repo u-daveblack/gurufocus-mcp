@@ -298,7 +298,7 @@ This project is an unofficial tool and is not affiliated with, endorsed by, or s
 
 - **Non-Affiliation**: This software is developed independently and does not represent the views or opinions of GuruFocus.
 - **Trademarks**: "GuruFocus" and the GuruFocus logo are trademarks of GuruFocus.com, LLC.
-- **Data Usage**: Users are responsible for ensuring their use of this tool complies with the GuruFocus [Terms of Use](https://www.gurufocus.com/term_of_use.php) and any applicable API usage agreements. This tool is provided "as is" and intended for educational and personal use.
+- **Data Usage**: Users are responsible for ensuring their use of this tool complies with the GuruFocus [Terms of Use](https://www.gurufocus.com/term-of-use) and any applicable API usage agreements. This tool is provided "as is" and intended for educational and personal use.
 - **No Warranty**: The authors of this software make no warranty as to the accuracy, completeness, or reliability of the data retrieved using this tool.
 - **No Investment Advice**: The information provided by this tool is for informational and educational purposes only and does not constitute investment advice, financial advice, trading advice, or any other sort of advice. You should not treat any of the tool's content as such.
 - **External Methodologies**: References to third-party investment strategies, books, authors, or personalities (e.g., Phil Town, Rule #1, Warren Buffett) are for educational purposes to demonstrate the application of published methodologies. This project is not affiliated with, endorsed by, or sponsored by any referenced individuals or entities. All trademarks belong to their respective owners.
