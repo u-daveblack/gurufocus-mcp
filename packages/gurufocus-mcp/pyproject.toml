@@ -5,7 +5,7 @@ description = "Unofficial MCP server for GuruFocus financial data"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
-authors = [{ name = "Investment Research Team" }]
+authors = [{ name = "David Black" }]
 keywords = ["gurufocus", "mcp", "model-context-protocol", "ai", "llm", "finance"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -38,9 +38,9 @@ dev = [
 gurufocus-mcp = "gurufocus_mcp.server:main"
 
 [project.urls]
-Homepage = "https://github.com/gurufocus-mcp/gurufocus-mcp"
-Documentation = "https://github.com/gurufocus-mcp/gurufocus-mcp#readme"
-Repository = "https://github.com/gurufocus-mcp/gurufocus-mcp"
+Homepage = "https://github.com/u-daveblack/gurufocus-mcp"
+Documentation = "https://github.com/u-daveblack/gurufocus-mcp#readme"
+Repository = "https://github.com/u-daveblack/gurufocus-mcp"
 
 [build-system]
 requires = ["hatchling"]
