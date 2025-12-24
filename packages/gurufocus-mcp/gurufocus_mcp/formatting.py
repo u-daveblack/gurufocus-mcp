@@ -6,8 +6,21 @@ both JSON and TOON formats for token-efficient responses.
 
 from typing import Any, Literal
 
-from toon_format import decode as toon_decode
-from toon_format import encode as toon_encode
+try:
+    from toon import decode as toon_decode  # type: ignore[import-untyped]
+    from toon import encode as toon_encode
+except ImportError:
+    # Fallback for older versions or if toon is not available
+    def toon_encode(data: Any) -> str:
+        import json
+
+        return json.dumps(data)
+
+    def toon_decode(data: str) -> Any:
+        import json
+
+        return json.loads(data)
+
 
 __all__ = ["DEFAULT_FORMAT", "OutputFormat", "format_output", "toon_decode", "toon_encode"]
 
@@ -37,7 +50,7 @@ def format_output(
         return data
 
     if format == "toon":
-        return toon_encode(data)
+        return str(toon_encode(data))
 
     # Should not reach here due to Literal type, but defensive
     raise ValueError(f"Unsupported format: {format}")
