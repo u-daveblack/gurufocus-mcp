@@ -54,6 +54,52 @@ export GURUFOCUS_API_TOKEN=your-token
 gurufocus-mcp
 ```
 
+### Claude Desktop Integration
+
+First, install the package:
+
+```bash
+pipx install gurufocus-mcp   # recommended for CLI tools
+# or
+pip install gurufocus-mcp
+```
+
+Then add to your Claude Desktop configuration file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "gurufocus": {
+      "command": "gurufocus-mcp",
+      "env": {
+        "GURUFOCUS_API_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+After adding the configuration, restart Claude Desktop. You should see the GuruFocus tools available in Claude's interface.
+
+**Running from source (for development):**
+
+```json
+{
+  "mcpServers": {
+    "gurufocus": {
+      "command": "uv",
+      "args": ["run", "gurufocus-mcp"],
+      "env": {
+        "GURUFOCUS_API_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
 ### Output Format (TOON)
 
 The MCP server supports [TOON format](https://github.com/toon-format/toon-python) for token-efficient responses, achieving 30-60% reduction in token usage compared to JSON.
