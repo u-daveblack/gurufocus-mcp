@@ -36,6 +36,9 @@ class CacheCategory(Enum):
     MARKET_DATA = "market_data"
     PRICE_HISTORY = "price_history"
 
+    # Price-dependent (short TTL as it changes with stock price)
+    CURRENT_DIVIDEND = "current_dividend"
+
     # Earnings-dependent (refresh quarterly or after earnings)
     SUMMARY = "summary"
     FINANCIALS = "financials"
@@ -127,6 +130,10 @@ _CACHE_CONFIGS: dict[CacheCategory, CacheConfig] = {
     CacheCategory.PRICE_HISTORY: CacheConfig(
         tier=CacheTier.PRICE_DEPENDENT,
         ttl=timedelta(days=1),  # Price data updates daily
+    ),
+    CacheCategory.CURRENT_DIVIDEND: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(days=1),  # Yield changes with price
     ),
     # TIER 3: Static (monthly+)
     CacheCategory.PROFILE: CacheConfig(

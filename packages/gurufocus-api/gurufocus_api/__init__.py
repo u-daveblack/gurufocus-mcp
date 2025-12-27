@@ -19,6 +19,7 @@ from .exceptions import (
 from .logging import configure_from_settings, configure_logging, get_logger, is_otel_available
 from .models import (
     AnalystEstimates,
+    CurrentDividend,
     DividendHistory,
     DividendMetrics,
     DividendPayment,
@@ -67,6 +68,7 @@ from .models import (
     StockGuruPick,
     StockGurus,
     StockGurusResponse,
+    StockQuote,
     StockSummary,
     TradesHistoryPeriod,
     ValuationMetrics,
@@ -84,6 +86,7 @@ __all__ = [
     "APIError",
     "AnalystEstimates",
     "AuthenticationError",
+    "CurrentDividend",
     "DividendHistory",
     "DividendMetrics",
     "DividendPayment",
@@ -142,6 +145,7 @@ __all__ = [
     "StockGuruPick",
     "StockGurus",
     "StockGurusResponse",
+    "StockQuote",
     "StockSummary",
     "TradesHistoryPeriod",
     "ValidationError",

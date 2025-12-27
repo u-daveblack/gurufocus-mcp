@@ -32,9 +32,9 @@ class TestToolRegistration:
         assert "get_stock_summary" in tools
 
     def test_tool_count(self, server) -> None:
-        """Test that 8 tools are registered."""
+        """Test that 11 tools are registered."""
         tool_count = len(server._tool_manager._tools)
-        assert tool_count == 8
+        assert tool_count == 11
 
     def test_get_stock_financials_tool_registered(self, server) -> None:
         """Test that get_stock_financials tool is registered."""
@@ -72,9 +72,12 @@ class TestToolDiscovery:
         """Test that list_tools returns all stock tools."""
         tools = await client.list_tools()
 
-        assert len(tools) == 8
+        assert len(tools) == 11
         tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
+        assert "get_stock_quote" in tool_names
+        assert "get_stock_dividend" in tool_names
+        assert "get_stock_current_dividend" in tool_names
         assert "get_stock_financials" in tool_names
         assert "get_stock_keyratios" in tool_names
         assert "get_qgarp_analysis" in tool_names

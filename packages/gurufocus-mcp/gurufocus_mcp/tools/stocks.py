@@ -85,6 +85,189 @@ def register_stock_tools(mcp: FastMCP) -> None:
             raise_api_error(e)
 
     @mcp.tool
+    async def get_stock_quote(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get real-time stock quote data.
+
+        Returns current market data for a stock:
+        - current_price: Current trading price
+        - price_change: Absolute price change from previous close
+        - price_change_pct: Percentage change from previous close
+        - open, high, low: Daily OHLV data
+        - volume: Trading volume for the day
+        - exchange: Stock exchange (NAS, NYSE, etc.)
+        - currency: Price currency (USD, EUR, etc.)
+
+        This is a lightweight alternative to get_stock_summary when you only
+        need current price and daily trading data, not full fundamental analysis.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_quote_called", symbol=normalized, format=format)
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            quote = await client.stocks.get_quote(normalized)
+            data = cast(dict[str, Any], quote.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_quote_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_quote_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_dividend(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get dividend history for a stock.
+
+        Returns historical dividend payment data:
+        - payments: Array of historical dividend payments
+          - ex_date: Ex-dividend date
+          - pay_date: Payment date
+          - record_date: Record date
+          - amount: Dividend amount per share
+          - type: Dividend type (regular, special, etc.)
+          - frequency: Payment frequency (quarterly, annual, etc.)
+
+        Use this tool when you need to analyze a stock's dividend history,
+        track payout trends, or evaluate income potential.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_dividend_called", symbol=normalized, format=format)
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            dividends = await client.stocks.get_dividends(normalized)
+            data = cast(dict[str, Any], dividends.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_dividend_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_dividend_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_current_dividend(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get current dividend information for a stock.
+
+        Returns current dividend data including:
+        - dividend_yield: Current dividend yield percentage
+        - dividends_per_share_ttm: Trailing twelve months dividend per share
+        - dividend_yield_10y_range: 10-year historical yield range
+        - dividend_yield_10y_median: 10-year median dividend yield
+        - next_payment_date: Next scheduled dividend payment date
+        - frequency: Payment frequency (Quarterly, Annual, etc.)
+        - currency: Currency symbol
+
+        Use this tool when you need to analyze a stock's current dividend
+        yield, compare it to historical ranges, or check payment schedule.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_current_dividend_called", symbol=normalized, format=format)
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            current_div = await client.stocks.get_current_dividend(normalized)
+            data = cast(dict[str, Any], current_div.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_current_dividend_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_current_dividend_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
     async def get_stock_financials(
         symbol: Annotated[
             str,

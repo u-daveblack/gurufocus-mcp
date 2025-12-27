@@ -1,6 +1,7 @@
 """Pydantic models for GuruFocus API responses."""
 
 from .dividends import (
+    CurrentDividend,
     DividendHistory,
     DividendPayment,
 )
@@ -50,6 +51,9 @@ from .price import (
     PriceHistory,
     PricePoint,
 )
+from .quote import (
+    StockQuote,
+)
 from .screener import (
     FilterBuilder,
     FilterOperator,
@@ -84,6 +88,7 @@ from .trades_history import (
 
 __all__ = [
     "AnalystEstimates",
+    "CurrentDividend",
     "DividendHistory",
     "DividendMetrics",
     "DividendPayment",
@@ -133,6 +138,7 @@ __all__ = [
     "StockGuruPick",
     "StockGurus",
     "StockGurusResponse",
+    "StockQuote",
     "StockSummary",
     "TradesHistoryPeriod",
     "ValuationMetrics",
