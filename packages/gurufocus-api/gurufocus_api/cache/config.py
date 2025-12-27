@@ -52,6 +52,7 @@ class CacheCategory(Enum):
     GURUS = "gurus"
     GURU_LIST = "guru_list"
     EXECUTIVES = "executives"
+    TRADES_HISTORY = "trades_history"
 
 
 @dataclass(frozen=True)
@@ -143,6 +144,10 @@ _CACHE_CONFIGS: dict[CacheCategory, CacheConfig] = {
     CacheCategory.EXECUTIVES: CacheConfig(
         tier=CacheTier.STATIC,
         ttl=timedelta(days=30),
+    ),
+    CacheCategory.TRADES_HISTORY: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=7),  # Guru trades update with SEC filings
     ),
 }
 

@@ -12,7 +12,7 @@ A Python client library for the GuruFocus API with async support, Pydantic model
 
 ## Implementation Status
 
-**Progress: 7 of 52 endpoints (13%)**
+**Progress: 10 of 52 endpoints (19%)**
 
 See [Implementation Tracker](../../docs/implementation_tracker.md) for full details.
 
@@ -27,6 +27,9 @@ See [Implementation Tracker](../../docs/implementation_tracker.md) for full deta
 | `GET /stock/{symbol}/analyst_estimate` | `stocks.get_analyst_estimates()` |
 | `GET /stock/{symbol}/dividend`         | `stocks.get_dividends()`         |
 | `GET /stock/{symbol}/insider`          | `stocks.get_insider_trades()`    |
+| `GET /stock/{symbol}/gurus`            | `stocks.get_gurus()`             |
+| `GET /stock/{symbol}/executives`       | `stocks.get_executives()`        |
+| `GET /stock/{symbol}/trades/history`   | `stocks.get_trades_history()`    |
 
 ## Installation
 

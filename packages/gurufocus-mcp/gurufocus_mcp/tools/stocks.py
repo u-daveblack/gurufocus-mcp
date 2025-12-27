@@ -347,3 +347,64 @@ def register_stock_tools(mcp: FastMCP) -> None:
         except Exception as e:
             logger.error("get_stock_executives_error", symbol=normalized, error=str(e))
             raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_trades_history(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get guru trades history for a stock.
+
+        Returns historical guru trading activity organized by portfolio
+        reporting periods:
+        - periods: Array of trading activity by date
+          - portdate: Portfolio reporting date (YYYY-MM-DD)
+          - buy_count: Number of gurus who bought
+          - buy_gurus: List of buyers with guru_name and share_change
+          - sell_count: Number of gurus who sold
+          - sell_gurus: List of sellers with guru_name and share_change
+
+        Use this tool when you need to track guru buying/selling patterns
+        over time or identify periods of institutional accumulation/distribution.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_trades_history_called", symbol=normalized, format=format)
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            trades = await client.stocks.get_trades_history(normalized)
+            data = cast(dict[str, Any], trades.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_trades_history_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_trades_history_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
