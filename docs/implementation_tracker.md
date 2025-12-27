@@ -8,8 +8,8 @@ This document tracks implementation status across both packages:
 
 | Package       | Implemented | Total | Progress |
 | ------------- | ----------- | ----- | -------- |
-| gurufocus-api | 12          | 52    | 23%      |
-| gurufocus-mcp | 11          | 52    | 21%      |
+| gurufocus-api | 15          | 52    | 29%      |
+| gurufocus-mcp | 14          | 52    | 27%      |
 
 ---
 
@@ -37,12 +37,12 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Price & Volume Data
 
-| Endpoint                               | API                            | MCP | Notes              |
-| -------------------------------------- | ------------------------------ | --- | ------------------ |
-| `GET /stock/{symbol}/price`            | ✅ `stocks.get_price_history()` | ❌   |                    |
-| `GET /stock/{symbol}/unadjusted_price` | ❌                              | ❌   |                    |
-| `GET /stock/{symbol}/price_ohlc`       | ❌                              | ❌   | Full OHLC + volume |
-| `GET /stock/{symbol}/volume`           | ❌                              | ❌   |                    |
+| Endpoint                               | API                                 | MCP                             | Notes                        |
+| -------------------------------------- | ----------------------------------- | ------------------------------- | ---------------------------- |
+| `GET /stock/{symbol}/price`            | ✅ `stocks.get_price_history()`      | ❌                               | Supports start_date/end_date |
+| `GET /stock/{symbol}/unadjusted_price` | ✅ `stocks.get_unadjusted_price()`   | ✅ `get_stock_unadjusted_price`  | Supports start_date/end_date |
+| `GET /stock/{symbol}/price_ohlc`       | ✅ `stocks.get_price_ohlc()`         | ✅ `get_stock_price_ohlc`        | Full OHLC + volume           |
+| `GET /stock/{symbol}/volume`           | ✅ `stocks.get_volume()`             | ✅ `get_stock_volume`            | Supports start_date/end_date |
 
 ### Ownership Data
 
@@ -206,7 +206,7 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | Category              | API       | MCP       | Total Endpoints |
 | --------------------- | --------- | --------- | --------------- |
 | Stock Summary & Basic | 4/4       | 4/4       | 4               |
-| Price & Volume        | 1/4       | 0/4       | 4               |
+| Price & Volume        | 4/4       | 3/4       | 4               |
 | Ownership             | 0/2       | 0/2       | 2               |
 | Trading Activity      | 4/4       | 3/4       | 4               |
 | Dividend              | 2/2       | 2/2       | 2               |
@@ -221,4 +221,4 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | General Data          | 0/7       | 0/7       | 7               |
 | Personal Data         | 0/5       | 0/5       | 5               |
 | ETF Data              | 0/2       | 0/2       | 2               |
-| **Total**             | **12/52** | **11/52** | **52**          |
+| **Total**             | **15/52** | **14/52** | **52**          |

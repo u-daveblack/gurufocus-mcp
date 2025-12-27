@@ -20,9 +20,12 @@ from gurufocus_api import (
     GuruFocusClient,
     GuruTradesHistory,
     InsiderTrades,
+    OHLCHistory,
     PriceHistory,
     StockGurusResponse,
     StockQuote,
+    UnadjustedPriceHistory,
+    VolumeHistory,
 )
 
 # Load sample responses from fixtures
@@ -45,6 +48,9 @@ SAMPLE_EXECUTIVES_RESPONSE = load_fixture("executives")
 SAMPLE_TRADES_HISTORY_RESPONSE = load_fixture("trades_history")
 SAMPLE_QUOTE_RESPONSE = load_fixture("quote")
 SAMPLE_CURRENT_DIVIDEND_RESPONSE = load_fixture("current_dividend")
+SAMPLE_PRICE_OHLC_RESPONSE = load_fixture("price_ohlc")
+SAMPLE_VOLUME_RESPONSE = load_fixture("volume")
+SAMPLE_UNADJUSTED_PRICE_RESPONSE = load_fixture("unadjusted_price")
 
 
 class TestQuoteEndpoint:
@@ -871,3 +877,332 @@ class TestTradesHistoryEndpoint:
             assert buyer.guru_id > 0
             assert buyer.guru_name is not None
             assert buyer.share_change > 0  # Positive for buys
+
+
+class TestPriceOHLCEndpoint:
+    """Tests for OHLC price endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_price_ohlc(self, cache_dir: Path) -> None:
+        """Test fetching OHLC price returns typed model."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/price_ohlc").mock(
+            return_value=Response(200, json=SAMPLE_PRICE_OHLC_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            ohlc = await client.stocks.get_price_ohlc("FAKE1")
+
+            assert isinstance(ohlc, OHLCHistory)
+            assert ohlc.symbol == "FAKE1"
+            assert len(ohlc.bars) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_price_ohlc_with_dates(self, cache_dir: Path) -> None:
+        """Test fetching OHLC with date parameters."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/price_ohlc",
+            params={"start_date": "20250101", "end_date": "20250131"},
+        ).mock(return_value=Response(200, json=SAMPLE_PRICE_OHLC_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            ohlc = await client.stocks.get_price_ohlc(
+                "FAKE1", start_date="20250101", end_date="20250131"
+            )
+            assert isinstance(ohlc, OHLCHistory)
+            assert route.called
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_price_ohlc_cached(self, cache_dir: Path) -> None:
+        """Test that OHLC is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/price_ohlc"
+        ).mock(return_value=Response(200, json=SAMPLE_PRICE_OHLC_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_price_ohlc("FAKE1")
+            await client.stocks.get_price_ohlc("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_price_ohlc_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw OHLC data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/price_ohlc").mock(
+            return_value=Response(200, json=SAMPLE_PRICE_OHLC_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_price_ohlc_raw("FAKE1")
+            assert isinstance(raw, list)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_ohlc_bar_details(self, cache_dir: Path) -> None:
+        """Test that OHLC bars contain expected details."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/price_ohlc").mock(
+            return_value=Response(200, json=SAMPLE_PRICE_OHLC_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            ohlc = await client.stocks.get_price_ohlc("FAKE1")
+
+            bar = ohlc.bars[0]
+            assert bar.date is not None
+            assert bar.open is not None
+            assert bar.high is not None
+            assert bar.low is not None
+            assert bar.close is not None
+            assert bar.volume is not None
+
+
+class TestVolumeEndpoint:
+    """Tests for volume endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_volume(self, cache_dir: Path) -> None:
+        """Test fetching volume returns typed model."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/volume").mock(
+            return_value=Response(200, json=SAMPLE_VOLUME_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            volume = await client.stocks.get_volume("FAKE1")
+
+            assert isinstance(volume, VolumeHistory)
+            assert volume.symbol == "FAKE1"
+            assert len(volume.data) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_volume_with_dates(self, cache_dir: Path) -> None:
+        """Test fetching volume with date parameters."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/volume",
+            params={"start_date": "20250101", "end_date": "20250131"},
+        ).mock(return_value=Response(200, json=SAMPLE_VOLUME_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            volume = await client.stocks.get_volume(
+                "FAKE1", start_date="20250101", end_date="20250131"
+            )
+            assert isinstance(volume, VolumeHistory)
+            assert route.called
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_volume_cached(self, cache_dir: Path) -> None:
+        """Test that volume is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/volume"
+        ).mock(return_value=Response(200, json=SAMPLE_VOLUME_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_volume("FAKE1")
+            await client.stocks.get_volume("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_volume_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw volume data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/volume").mock(
+            return_value=Response(200, json=SAMPLE_VOLUME_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_volume_raw("FAKE1")
+            assert isinstance(raw, list)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_volume_point_details(self, cache_dir: Path) -> None:
+        """Test that volume points contain expected details."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/volume").mock(
+            return_value=Response(200, json=SAMPLE_VOLUME_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            volume = await client.stocks.get_volume("FAKE1")
+
+            point = volume.data[0]
+            assert point.date is not None
+            assert point.volume > 0
+
+
+class TestUnadjustedPriceEndpoint:
+    """Tests for unadjusted price endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_unadjusted_price(self, cache_dir: Path) -> None:
+        """Test fetching unadjusted price returns typed model."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/unadjusted_price"
+        ).mock(return_value=Response(200, json=SAMPLE_UNADJUSTED_PRICE_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            prices = await client.stocks.get_unadjusted_price("FAKE1")
+
+            assert isinstance(prices, UnadjustedPriceHistory)
+            assert prices.symbol == "FAKE1"
+            assert len(prices.prices) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_unadjusted_price_with_dates(self, cache_dir: Path) -> None:
+        """Test fetching unadjusted price with date parameters."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/unadjusted_price",
+            params={"start_date": "20250101", "end_date": "20250131"},
+        ).mock(return_value=Response(200, json=SAMPLE_UNADJUSTED_PRICE_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            prices = await client.stocks.get_unadjusted_price(
+                "FAKE1", start_date="20250101", end_date="20250131"
+            )
+            assert isinstance(prices, UnadjustedPriceHistory)
+            assert route.called
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_unadjusted_price_cached(self, cache_dir: Path) -> None:
+        """Test that unadjusted price is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/unadjusted_price"
+        ).mock(return_value=Response(200, json=SAMPLE_UNADJUSTED_PRICE_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_unadjusted_price("FAKE1")
+            await client.stocks.get_unadjusted_price("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_unadjusted_price_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw unadjusted price data."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/unadjusted_price"
+        ).mock(return_value=Response(200, json=SAMPLE_UNADJUSTED_PRICE_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_unadjusted_price_raw("FAKE1")
+            assert isinstance(raw, list)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_unadjusted_price_point_details(self, cache_dir: Path) -> None:
+        """Test that unadjusted price points contain expected details."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/unadjusted_price"
+        ).mock(return_value=Response(200, json=SAMPLE_UNADJUSTED_PRICE_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            prices = await client.stocks.get_unadjusted_price("FAKE1")
+
+            point = prices.prices[0]
+            assert point.date is not None
+            assert point.price > 0
+
+
+class TestOHLCModelsEdgeCases:
+    """Tests for edge cases in OHLC model parsing."""
+
+    def test_ohlc_history_empty_response(self) -> None:
+        """Test parsing empty OHLC response."""
+        ohlc = OHLCHistory.from_api_response([], "TEST")
+        assert ohlc.symbol == "TEST"
+        assert len(ohlc.bars) == 0
+
+    def test_volume_history_empty_response(self) -> None:
+        """Test parsing empty volume response."""
+        volume = VolumeHistory.from_api_response([], "TEST")
+        assert volume.symbol == "TEST"
+        assert len(volume.data) == 0
+
+    def test_unadjusted_price_history_empty_response(self) -> None:
+        """Test parsing empty unadjusted price response."""
+        prices = UnadjustedPriceHistory.from_api_response([], "TEST")
+        assert prices.symbol == "TEST"
+        assert len(prices.prices) == 0

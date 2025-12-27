@@ -35,6 +35,9 @@ class CacheCategory(Enum):
     VALUATION_RATIOS = "valuation_ratios"
     MARKET_DATA = "market_data"
     PRICE_HISTORY = "price_history"
+    PRICE_OHLC = "price_ohlc"
+    VOLUME = "volume"
+    UNADJUSTED_PRICE = "unadjusted_price"
 
     # Price-dependent (short TTL as it changes with stock price)
     CURRENT_DIVIDEND = "current_dividend"
@@ -130,6 +133,18 @@ _CACHE_CONFIGS: dict[CacheCategory, CacheConfig] = {
     CacheCategory.PRICE_HISTORY: CacheConfig(
         tier=CacheTier.PRICE_DEPENDENT,
         ttl=timedelta(days=1),  # Price data updates daily
+    ),
+    CacheCategory.PRICE_OHLC: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(days=1),  # OHLC data updates daily
+    ),
+    CacheCategory.VOLUME: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(days=1),  # Volume data updates daily
+    ),
+    CacheCategory.UNADJUSTED_PRICE: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(days=1),  # Unadjusted prices update daily
     ),
     CacheCategory.CURRENT_DIVIDEND: CacheConfig(
         tier=CacheTier.PRICE_DEPENDENT,

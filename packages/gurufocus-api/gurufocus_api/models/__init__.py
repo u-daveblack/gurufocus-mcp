@@ -47,6 +47,14 @@ from .keyratios import (
     SolvencyRatios,
     ValuationRatios,
 )
+from .ohlc import (
+    OHLCBar,
+    OHLCHistory,
+    UnadjustedPriceHistory,
+    UnadjustedPricePoint,
+    VolumeHistory,
+    VolumePoint,
+)
 from .price import (
     PriceHistory,
     PricePoint,
@@ -117,6 +125,8 @@ __all__ = [
     "InstitutionalActivity",
     "KeyRatios",
     "LiquidityRatios",
+    "OHLCBar",
+    "OHLCHistory",
     "PerShareData",
     "PriceHistory",
     "PriceInfo",
@@ -141,8 +151,12 @@ __all__ = [
     "StockQuote",
     "StockSummary",
     "TradesHistoryPeriod",
+    "UnadjustedPriceHistory",
+    "UnadjustedPricePoint",
     "ValuationMetrics",
     "ValuationRatios",
+    "VolumeHistory",
+    "VolumePoint",
     "deep_value_filters",
     "dividend_filters",
     "growth_filters",
