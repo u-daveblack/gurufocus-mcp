@@ -17,6 +17,7 @@ from gurufocus_api import (
     DividendHistory,
     ExecutiveList,
     GuruFocusClient,
+    GuruTradesHistory,
     InsiderTrades,
     PriceHistory,
     StockGurusResponse,
@@ -39,6 +40,7 @@ SAMPLE_PRICE_RESPONSE = load_fixture("price")
 SAMPLE_INSIDERS_RESPONSE = load_fixture("insider")
 SAMPLE_GURUS_RESPONSE = load_fixture("gurus")
 SAMPLE_EXECUTIVES_RESPONSE = load_fixture("executives")
+SAMPLE_TRADES_HISTORY_RESPONSE = load_fixture("trades_history")
 
 
 class TestAnalystEstimatesEndpoint:
@@ -384,6 +386,12 @@ class TestModelsEdgeCases:
         assert execs.symbol == "TEST"
         assert len(execs.executives) == 0
 
+    def test_trades_history_empty_response(self) -> None:
+        """Test parsing empty trades history response."""
+        trades = GuruTradesHistory.from_api_response([], "TEST")
+        assert trades.symbol == "TEST"
+        assert len(trades.periods) == 0
+
 
 class TestGurusEndpoint:
     """Tests for gurus endpoint."""
@@ -572,3 +580,110 @@ class TestExecutivesEndpoint:
             assert exec.name is not None
             assert exec.position is not None
             assert exec.transaction_date is not None
+
+
+class TestTradesHistoryEndpoint:
+    """Tests for trades history endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_trades_history(self, cache_dir: Path) -> None:
+        """Test fetching trades history returns typed model."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/trades/history"
+        ).mock(return_value=Response(200, json=SAMPLE_TRADES_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            trades = await client.stocks.get_trades_history("FAKE1")
+
+            assert isinstance(trades, GuruTradesHistory)
+            assert trades.symbol == "FAKE1"
+            assert len(trades.periods) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_trades_history_cached(self, cache_dir: Path) -> None:
+        """Test that trades history is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/trades/history"
+        ).mock(return_value=Response(200, json=SAMPLE_TRADES_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_trades_history("FAKE1")
+            await client.stocks.get_trades_history("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_trades_history_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw trades history data."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/trades/history"
+        ).mock(return_value=Response(200, json=SAMPLE_TRADES_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_trades_history_raw("FAKE1")
+            # API returns array directly
+            assert isinstance(raw, list)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_trades_history_period_details(self, cache_dir: Path) -> None:
+        """Test that individual periods contain expected details."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/trades/history"
+        ).mock(return_value=Response(200, json=SAMPLE_TRADES_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            trades = await client.stocks.get_trades_history("FAKE1")
+
+            period = trades.periods[0]
+            assert period.symbol is not None
+            assert period.portdate is not None
+            assert period.buy_count >= 0
+            assert period.sell_count >= 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_trades_history_guru_actions(self, cache_dir: Path) -> None:
+        """Test that guru buy/sell actions are parsed correctly."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/trades/history"
+        ).mock(return_value=Response(200, json=SAMPLE_TRADES_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            trades = await client.stocks.get_trades_history("FAKE1")
+
+            # First period should have buy_gurus
+            period = trades.periods[0]
+            assert len(period.buy_gurus) > 0
+            buyer = period.buy_gurus[0]
+            assert buyer.guru_id > 0
+            assert buyer.guru_name is not None
+            assert buyer.share_change > 0  # Positive for buys

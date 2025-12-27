@@ -76,6 +76,11 @@ from .summary import (
     StockSummary,
     ValuationMetrics,
 )
+from .trades_history import (
+    GuruTradeAction,
+    GuruTradesHistory,
+    TradesHistoryPeriod,
+)
 
 __all__ = [
     "AnalystEstimates",
@@ -99,7 +104,9 @@ __all__ = [
     "GuruList",
     "GuruPicks",
     "GuruTrade",
+    "GuruTradeAction",
     "GuruTrades",
+    "GuruTradesHistory",
     "InsiderTrade",
     "InsiderTrades",
     "InstitutionalActivity",
@@ -127,6 +134,7 @@ __all__ = [
     "StockGurus",
     "StockGurusResponse",
     "StockSummary",
+    "TradesHistoryPeriod",
     "ValuationMetrics",
     "ValuationRatios",
     "deep_value_filters",
