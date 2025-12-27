@@ -5,7 +5,9 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from ..cache.config import CacheCategory
 from ..models.dividends import DividendHistory
 from ..models.estimates import AnalystEstimates
+from ..models.executives import ExecutiveList
 from ..models.financials import FinancialStatements
+from ..models.gurus import StockGurusResponse
 from ..models.insiders import InsiderTrades
 from ..models.keyratios import KeyRatios
 from ..models.price import PriceHistory
@@ -511,3 +513,133 @@ class StocksEndpoint:
         await cache.set(CacheCategory.INSIDERS, symbol, value=data)
 
         return cast(dict[str, Any], data)
+
+    async def get_gurus(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> StockGurusResponse:
+        """Get guru holdings and trading activity for a stock.
+
+        Retrieves institutional investor (guru) holdings and recent
+        trading activity including buys, sells, and position changes.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            StockGurusResponse with picks (trading activity) and holdings
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            gurus = await client.stocks.get_gurus("AAPL")
+            print(f"Number of guru holders: {len(gurus.holdings)}")
+            for pick in gurus.picks[:5]:
+                print(f"{pick.guru}: {pick.action} ({pick.comment})")
+        """
+        data = await self.get_gurus_raw(symbol, bypass_cache=bypass_cache)
+        return StockGurusResponse.from_api_response(data, symbol.upper().strip())
+
+    async def get_gurus_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw guru holdings data for a stock.
+
+        Same as get_gurus() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.GURUS, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/gurus")
+
+        # Cache the response
+        await cache.set(CacheCategory.GURUS, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_executives(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> ExecutiveList:
+        """Get company executives and directors for a stock.
+
+        Retrieves a list of company officers and board directors
+        with their positions and last transaction dates.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            ExecutiveList with list of executives and directors
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            execs = await client.stocks.get_executives("AAPL")
+            print(f"Number of executives: {len(execs.executives)}")
+            for exec in execs.executives[:5]:
+                print(f"{exec.name}: {exec.position}")
+        """
+        data = await self.get_executives_raw(symbol, bypass_cache=bypass_cache)
+        return ExecutiveList.from_api_response(data, symbol.upper().strip())
+
+    async def get_executives_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Get raw executives data for a stock.
+
+        Same as get_executives() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a list of dictionaries
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.EXECUTIVES, symbol)
+            if cached_data is not None:
+                return cast(list[dict[str, Any]], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/executives")
+
+        # Cache the response
+        await cache.set(CacheCategory.EXECUTIVES, symbol, value=data)
+
+        return cast(list[dict[str, Any]], data)

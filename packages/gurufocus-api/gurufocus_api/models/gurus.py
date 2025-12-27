@@ -4,6 +4,112 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+# --- Models for GET /stock/{symbol}/gurus endpoint ---
+
+
+class StockGuruPick(BaseModel):
+    """A guru's recent trading activity in a stock (from picks array)."""
+
+    guru: str = Field(description="Guru or firm name")
+    guru_id: str = Field(description="Unique identifier for the guru")
+    date: str = Field(description="Transaction date (YYYY-MM-DD)")
+    action: str = Field(description="Trade action (Add, Reduce, New Buy, Sold Out)")
+    impact: str = Field(description="Impact score on position")
+    price_min: str = Field(description="Minimum price during period")
+    price_max: str = Field(description="Maximum price during period")
+    avg_price: str = Field(description="Average price during period")
+    comment: str = Field(description="Action description (e.g., 'Add 12.5%')")
+    current_shares: str = Field(description="Current shares held after action")
+
+
+class StockGuruHolding(BaseModel):
+    """A guru's current holding in a stock (from holdings array)."""
+
+    guru: str = Field(description="Guru or firm name")
+    guru_id: str = Field(description="Unique identifier for the guru")
+    date: str = Field(description="Date of holding report (YYYY-MM-DD)")
+    current_shares: str = Field(description="Current shares held (formatted with commas)")
+    perc_shares: str = Field(description="Percentage of company shares held")
+    perc_assets: str = Field(description="Percentage of guru's portfolio")
+    change: str = Field(description="Percentage change in position")
+
+
+class StockGurusResponse(BaseModel):
+    """Guru holdings and trading activity for a stock.
+
+    Response from GET /stock/{symbol}/gurus endpoint.
+    Contains both recent trading activity (picks) and current holdings.
+    """
+
+    symbol: str = Field(description="Stock ticker symbol")
+    picks: list[StockGuruPick] = Field(
+        default_factory=list, description="Recent guru trading activity"
+    )
+    holdings: list[StockGuruHolding] = Field(
+        default_factory=list, description="Current guru holdings"
+    )
+
+    @classmethod
+    def from_api_response(cls, data: dict[str, Any], symbol: str) -> "StockGurusResponse":
+        """Create StockGurusResponse from raw API response.
+
+        Args:
+            data: Raw JSON response from the API - dict with symbol as key
+                  e.g., {"AAPL": {"picks": [...], "holdings": [...]}}
+            symbol: Stock ticker symbol
+
+        Returns:
+            Populated StockGurusResponse instance
+        """
+        symbol = symbol.upper().strip()
+        symbol_data = data.get(symbol, data)
+
+        # Parse picks
+        picks_raw = symbol_data.get("picks", [])
+        picks = [_parse_stock_guru_pick(p) for p in picks_raw if isinstance(p, dict)]
+
+        # Parse holdings
+        holdings_raw = symbol_data.get("holdings", [])
+        holdings = [_parse_stock_guru_holding(h) for h in holdings_raw if isinstance(h, dict)]
+
+        return cls(
+            symbol=symbol,
+            picks=picks,
+            holdings=holdings,
+        )
+
+
+def _parse_stock_guru_pick(data: dict[str, Any]) -> StockGuruPick:
+    """Parse a single guru pick from API data."""
+    return StockGuruPick(
+        guru=data.get("guru", "Unknown"),
+        guru_id=str(data.get("guru_id", "")),
+        date=data.get("date", ""),
+        action=data.get("action", ""),
+        impact=str(data.get("impact", "0")),
+        price_min=str(data.get("price_min", "0")),
+        price_max=str(data.get("price_max", "0")),
+        avg_price=str(data.get("Avg", data.get("avg_price", "0"))),
+        comment=data.get("comment", ""),
+        current_shares=str(data.get("current_shares", "0")),
+    )
+
+
+def _parse_stock_guru_holding(data: dict[str, Any]) -> StockGuruHolding:
+    """Parse a single guru holding from API data."""
+    return StockGuruHolding(
+        guru=data.get("guru", "Unknown"),
+        guru_id=str(data.get("guru_id", "")),
+        date=data.get("date", ""),
+        current_shares=str(data.get("current_shares", "0")),
+        perc_shares=str(data.get("perc_shares", "0")),
+        perc_assets=str(data.get("perc_assets", "0")),
+        change=str(data.get("change", "0")),
+    )
+
+
+# --- Models for other guru endpoints (guru portfolios, etc.) ---
+
 
 class GuruInfo(BaseModel):
     """Information about a guru/institutional investor."""

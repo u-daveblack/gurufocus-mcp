@@ -225,3 +225,125 @@ def register_stock_tools(mcp: FastMCP) -> None:
         except Exception as e:
             logger.error("get_stock_keyratios_error", symbol=normalized, error=str(e))
             raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_gurus(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get guru (institutional investor) holdings for a stock.
+
+        Returns data about famous investors who hold positions in this stock:
+        - Picks: Recent trading activity including buys, sells, and position changes
+          - guru: Investor/firm name (e.g., Warren Buffett, BlackRock)
+          - action: Trade type (Add, Reduce, New Buy, Sold Out)
+          - impact: Position impact percentage
+          - price range: Min/max/avg prices during the period
+          - current_shares: Shares held after the action
+        - Holdings: Current guru positions
+          - current_shares: Number of shares held
+          - perc_shares: Percentage of company shares owned
+          - perc_assets: Percentage of guru's portfolio
+          - change: Position change percentage
+
+        Use this tool when you need to see which famous investors own a stock,
+        track guru buying/selling activity, or follow institutional investor trends.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_gurus_called", symbol=normalized, format=format)
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            gurus = await client.stocks.get_gurus(normalized)
+            data = cast(dict[str, Any], gurus.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_gurus_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_gurus_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_executives(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get company executives and directors for a stock.
+
+        Returns a list of company officers and board members:
+        - name: Executive name
+        - position: Title/role (e.g., 'director, officer: Chief Executive Officer')
+        - transaction_date: Date of last insider transaction
+
+        Use this tool when you need to identify company leadership,
+        check insider trading activity, or understand corporate governance.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_executives_called", symbol=normalized, format=format)
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            executives = await client.stocks.get_executives(normalized)
+            data = cast(dict[str, Any], executives.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_executives_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_executives_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
