@@ -8,8 +8,8 @@ This document tracks implementation status across both packages:
 
 | Package       | Implemented | Total | Progress |
 | ------------- | ----------- | ----- | -------- |
-| gurufocus-api | 7           | 52    | 13%      |
-| gurufocus-mcp | 5           | 52    | 10%      |
+| gurufocus-api | 9           | 52    | 17%      |
+| gurufocus-mcp | 7           | 52    | 13%      |
 
 ---
 
@@ -53,12 +53,12 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Trading Activity
 
-| Endpoint                             | API                             | MCP | Notes                 |
-| ------------------------------------ | ------------------------------- | --- | --------------------- |
-| `GET /stock/{symbol}/gurus`          | ❌                               | ❌   | Real-time guru trades |
-| `GET /stock/{symbol}/insider`        | ✅ `stocks.get_insider_trades()` | ❌   |                       |
-| `GET /stock/{symbol}/executives`     | ❌                               | ❌   | Company executives    |
-| `GET /stock/{symbol}/trades/history` | ❌                               | ❌   | Guru trades history   |
+| Endpoint                             | API                             | MCP                        | Notes                 |
+| ------------------------------------ | ------------------------------- | -------------------------- | --------------------- |
+| `GET /stock/{symbol}/gurus`          | ✅ `stocks.get_gurus()`          | ✅ `get_stock_gurus`        | Guru holdings & picks |
+| `GET /stock/{symbol}/insider`        | ✅ `stocks.get_insider_trades()` | ❌                          |                       |
+| `GET /stock/{symbol}/executives`     | ✅ `stocks.get_executives()`     | ✅ `get_stock_executives`   | Company executives    |
+| `GET /stock/{symbol}/trades/history` | ❌                               | ❌                          | Guru trades history   |
 
 ### Dividend Data
 
@@ -208,7 +208,7 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | Stock Summary & Basic | 3/4      | 3/4      | 4               |
 | Price & Volume        | 1/4      | 0/4      | 4               |
 | Ownership             | 0/2      | 0/2      | 2               |
-| Trading Activity      | 1/4      | 0/4      | 4               |
+| Trading Activity      | 3/4      | 2/4      | 4               |
 | Dividend              | 1/2      | 0/2      | 2               |
 | Estimates & Forecasts | 1/2      | 0/2      | 2               |
 | Operating & Segment   | 0/2      | 0/2      | 2               |
@@ -221,4 +221,4 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | General Data          | 0/7      | 0/7      | 7               |
 | Personal Data         | 0/5      | 0/5      | 5               |
 | ETF Data              | 0/2      | 0/2      | 2               |
-| **Total**             | **7/52** | **3/52** | **52**          |
+| **Total**             | **9/52** | **5/52** | **52**          |
