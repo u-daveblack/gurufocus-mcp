@@ -591,3 +591,247 @@ def register_stock_tools(mcp: FastMCP) -> None:
         except Exception as e:
             logger.error("get_stock_trades_history_error", symbol=normalized, error=str(e))
             raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_price_ohlc(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        start_date: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description="Start date in YYYYMMDD format (e.g., 20250101). If not provided, returns all available data.",
+            ),
+        ] = None,
+        end_date: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description="End date in YYYYMMDD format (e.g., 20251231). If not provided, returns up to current date.",
+            ),
+        ] = None,
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get OHLC (Open-High-Low-Close) price history for a stock.
+
+        Returns daily OHLC price bars with volume data:
+        - bars: Array of daily price bars
+          - date: Trading date (YYYY-MM-DD)
+          - open: Opening price
+          - high: Highest price of the day
+          - low: Lowest price of the day
+          - close: Closing price
+          - volume: Trading volume
+          - unadjusted_close: Unadjusted closing price
+
+        Use this tool when you need historical candlestick/OHLC data for
+        technical analysis, charting, or computing price-based indicators.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug(
+            "get_stock_price_ohlc_called",
+            symbol=normalized,
+            start_date=start_date,
+            end_date=end_date,
+            format=format,
+        )
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            ohlc = await client.stocks.get_price_ohlc(
+                normalized, start_date=start_date, end_date=end_date
+            )
+            data = cast(dict[str, Any], ohlc.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_price_ohlc_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_price_ohlc_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_volume(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        start_date: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description="Start date in YYYYMMDD format (e.g., 20250101). If not provided, returns all available data.",
+            ),
+        ] = None,
+        end_date: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description="End date in YYYYMMDD format (e.g., 20251231). If not provided, returns up to current date.",
+            ),
+        ] = None,
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get trading volume history for a stock.
+
+        Returns daily trading volume data:
+        - data: Array of daily volume points
+          - date: Trading date (MM-DD-YYYY)
+          - volume: Number of shares traded
+
+        Use this tool when you need to analyze volume patterns,
+        identify accumulation/distribution, or study liquidity trends.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug(
+            "get_stock_volume_called",
+            symbol=normalized,
+            start_date=start_date,
+            end_date=end_date,
+            format=format,
+        )
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            volume = await client.stocks.get_volume(
+                normalized, start_date=start_date, end_date=end_date
+            )
+            data = cast(dict[str, Any], volume.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_volume_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_volume_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_unadjusted_price(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        start_date: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description="Start date in YYYYMMDD format (e.g., 20250101). If not provided, returns all available data.",
+            ),
+        ] = None,
+        end_date: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description="End date in YYYYMMDD format (e.g., 20251231). If not provided, returns up to current date.",
+            ),
+        ] = None,
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get unadjusted (pre-split) price history for a stock.
+
+        Returns daily unadjusted prices:
+        - prices: Array of daily price points
+          - date: Trading date (MM-DD-YYYY)
+          - price: Unadjusted closing price
+
+        Unadjusted prices show the actual historical trading prices without
+        adjustments for stock splits or dividends. Use this when you need
+        to see the actual price investors paid at a given time, or to
+        compare with historical news/events.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug(
+            "get_stock_unadjusted_price_called",
+            symbol=normalized,
+            start_date=start_date,
+            end_date=end_date,
+            format=format,
+        )
+
+        try:
+            client = getattr(ctx.fastmcp, "state", {}).get("client")
+            if client is None:
+                raise ToolError(
+                    "GuruFocus client not initialized. "
+                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
+                )
+
+            prices = await client.stocks.get_unadjusted_price(
+                normalized, start_date=start_date, end_date=end_date
+            )
+            data = cast(dict[str, Any], prices.model_dump(mode="json", exclude_none=True))
+            logger.debug("get_stock_unadjusted_price_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_unadjusted_price_error", symbol=normalized, error=str(e))
+            raise_api_error(e)

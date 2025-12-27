@@ -42,7 +42,7 @@ class TestMCPProtocolCompliance:
         """Test that list_tools returns all stock tools."""
         tools = await client.list_tools()
 
-        assert len(tools) == 11
+        assert len(tools) == 14
         tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
         assert "get_stock_quote" in tool_names
@@ -54,6 +54,9 @@ class TestMCPProtocolCompliance:
         assert "get_stock_gurus" in tool_names
         assert "get_stock_executives" in tool_names
         assert "get_stock_trades_history" in tool_names
+        assert "get_stock_price_ohlc" in tool_names
+        assert "get_stock_volume" in tool_names
+        assert "get_stock_unadjusted_price" in tool_names
 
     @pytest.mark.asyncio
     async def test_no_resource_templates(self, client: Client) -> None:

@@ -12,11 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### gurufocus-api
 - `stocks.get_quote()` - Real-time stock quote with OHLCV data and price changes
 - `stocks.get_current_dividend()` - Current dividend yield, TTM dividends, and payment schedule
+- `stocks.get_price_ohlc()` - Historical OHLC price bars with volume for technical analysis
+- `stocks.get_volume()` - Historical trading volume data
+- `stocks.get_unadjusted_price()` - Historical unadjusted (pre-split) prices
 
 #### gurufocus-mcp
 - `get_stock_quote` - MCP tool for real-time stock quotes
 - `get_stock_dividend` - MCP tool for dividend history
 - `get_stock_current_dividend` - MCP tool for current dividend information
+- `get_stock_price_ohlc` - MCP tool for OHLC price history with date range support
+- `get_stock_volume` - MCP tool for volume history with date range support
+- `get_stock_unadjusted_price` - MCP tool for unadjusted price history
 
 ## [v0.3.0] - 2025-12-27
 
