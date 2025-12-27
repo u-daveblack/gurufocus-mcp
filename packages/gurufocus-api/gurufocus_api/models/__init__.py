@@ -9,6 +9,10 @@ from .estimates import (
     EstimatePeriod,
     GrowthEstimates,
 )
+from .executives import (
+    Executive,
+    ExecutiveList,
+)
 from .financials import (
     FinancialPeriod,
     FinancialStatements,
@@ -21,7 +25,10 @@ from .gurus import (
     GuruTrade,
     GuruTrades,
     StockGuruHolder,
+    StockGuruHolding,
+    StockGuruPick,
     StockGurus,
+    StockGurusResponse,
 )
 from .insiders import (
     InsiderTrade,
@@ -77,6 +84,8 @@ __all__ = [
     "DividendPayment",
     "EfficiencyRatios",
     "EstimatePeriod",
+    "Executive",
+    "ExecutiveList",
     "FilterBuilder",
     "FilterOperator",
     "FinancialPeriod",
@@ -113,7 +122,10 @@ __all__ = [
     "ScreenerStock",
     "SolvencyRatios",
     "StockGuruHolder",
+    "StockGuruHolding",
+    "StockGuruPick",
     "StockGurus",
+    "StockGurusResponse",
     "StockSummary",
     "ValuationMetrics",
     "ValuationRatios",
