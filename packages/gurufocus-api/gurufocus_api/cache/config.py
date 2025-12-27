@@ -51,6 +51,7 @@ class CacheCategory(Enum):
     PROFILE = "profile"
     GURUS = "gurus"
     GURU_LIST = "guru_list"
+    EXECUTIVES = "executives"
 
 
 @dataclass(frozen=True)
@@ -138,6 +139,10 @@ _CACHE_CONFIGS: dict[CacheCategory, CacheConfig] = {
     CacheCategory.GURU_LIST: CacheConfig(
         tier=CacheTier.STATIC,
         ttl=timedelta(days=7),
+    ),
+    CacheCategory.EXECUTIVES: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=30),
     ),
 }
 
