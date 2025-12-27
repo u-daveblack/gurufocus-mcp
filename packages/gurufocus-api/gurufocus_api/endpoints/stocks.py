@@ -12,6 +12,7 @@ from ..models.insiders import InsiderTrades
 from ..models.keyratios import KeyRatios
 from ..models.price import PriceHistory
 from ..models.summary import StockSummary
+from ..models.trades_history import GuruTradesHistory
 
 if TYPE_CHECKING:
     from ..client import GuruFocusClient
@@ -641,5 +642,72 @@ class StocksEndpoint:
 
         # Cache the response
         await cache.set(CacheCategory.EXECUTIVES, symbol, value=data)
+
+        return cast(list[dict[str, Any]], data)
+
+    async def get_trades_history(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> GuruTradesHistory:
+        """Get guru trades history for a stock.
+
+        Retrieves historical guru trading activity organized by portfolio
+        reporting periods, showing which institutional investors bought or
+        sold shares and in what quantities.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            GuruTradesHistory with trading activity by period
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            trades = await client.stocks.get_trades_history("AAPL")
+            for period in trades.periods[:3]:
+                print(f"{period.portdate}: {period.buy_count} buys, {period.sell_count} sells")
+                for buyer in period.buy_gurus:
+                    print(f"  + {buyer.guru_name}: {buyer.share_change:,} shares")
+        """
+        data = await self.get_trades_history_raw(symbol, bypass_cache=bypass_cache)
+        return GuruTradesHistory.from_api_response(data, symbol.upper().strip())
+
+    async def get_trades_history_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Get raw guru trades history data for a stock.
+
+        Same as get_trades_history() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a list of dictionaries
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.TRADES_HISTORY, symbol)
+            if cached_data is not None:
+                return cast(list[dict[str, Any]], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/trades/history")
+
+        # Cache the response
+        await cache.set(CacheCategory.TRADES_HISTORY, symbol, value=data)
 
         return cast(list[dict[str, Any]], data)

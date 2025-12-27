@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### gurufocus-api
+- `stocks.get_trades_history()` - Guru trades history endpoint showing institutional buying/selling activity over time
+- `stocks.get_gurus()` - Guru holdings and trading activity for a stock
+- `stocks.get_executives()` - Company executives and directors
+
+#### gurufocus-mcp
+- `get_stock_trades_history` - MCP tool for guru trades history
+- `get_stock_gurus` - MCP tool for guru holdings
+- `get_stock_executives` - MCP tool for company executives
+
 ## [0.1.0] - 2025-12-24
 
 ### Added

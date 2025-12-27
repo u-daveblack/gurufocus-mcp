@@ -71,3 +71,7 @@ Environment variables (loaded via pydantic-settings):
 ## Testing
 
 Tests use `pytest-asyncio` with `asyncio_mode = "auto"`. API tests use `respx` to mock httpx requests. Test fixtures are in `packages/*/tests/conftest.py`.
+
+## Changelog
+
+When making changes, update `CHANGELOG.md` under the `[Unreleased]` section. Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format with categories: Added, Changed, Deprecated, Removed, Fixed, Security.

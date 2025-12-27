@@ -83,14 +83,14 @@ class TestServerResources:
         assert "get_stock_summary" in tool_names
 
     def test_server_tool_count(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Test that server has exactly 7 tools registered."""
+        """Test that server has exactly 8 tools registered."""
         monkeypatch.setenv("GURUFOCUS_API_TOKEN", "test-token")
 
         settings = MCPServerSettings(api_token="test-token")
         server = create_server(settings)
 
         tool_count = len(server._tool_manager._tools)
-        assert tool_count == 7
+        assert tool_count == 8
 
 
 class TestServerMain:
