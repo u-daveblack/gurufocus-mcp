@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from ..cache.config import CacheCategory
-from ..models.dividends import DividendHistory
+from ..models.dividends import CurrentDividend, DividendHistory
 from ..models.estimates import AnalystEstimates
 from ..models.executives import ExecutiveList
 from ..models.financials import FinancialStatements
@@ -11,6 +11,7 @@ from ..models.gurus import StockGurusResponse
 from ..models.insiders import InsiderTrades
 from ..models.keyratios import KeyRatios
 from ..models.price import PriceHistory
+from ..models.quote import StockQuote
 from ..models.summary import StockSummary
 from ..models.trades_history import GuruTradesHistory
 
@@ -103,6 +104,72 @@ class StocksEndpoint:
 
         # Cache the response
         await cache.set(CacheCategory.SUMMARY, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_quote(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> StockQuote:
+        """Get real-time quote data for a stock.
+
+        Retrieves current price, daily OHLV data, and price changes.
+        This is a lightweight alternative to get_summary() when you
+        only need current market data.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            StockQuote with current price, OHLV, and change data
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            quote = await client.stocks.get_quote("AAPL")
+            print(f"Price: ${quote.current_price}")
+            print(f"Change: {quote.price_change_pct}%")
+            print(f"Volume: {quote.volume:,}")
+        """
+        data = await self.get_quote_raw(symbol, bypass_cache=bypass_cache)
+        return StockQuote.from_api_response(data, symbol.upper().strip())
+
+    async def get_quote_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw quote data for a stock.
+
+        Same as get_quote() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.QUOTE, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/quote")
+
+        # Cache the response
+        await cache.set(CacheCategory.QUOTE, symbol, value=data)
 
         return cast(dict[str, Any], data)
 
@@ -379,6 +446,71 @@ class StocksEndpoint:
 
         # Cache the response
         await cache.set(CacheCategory.DIVIDENDS, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_current_dividend(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> CurrentDividend:
+        """Get current dividend information for a stock.
+
+        Retrieves current dividend yield, TTM dividend per share,
+        payment schedule, and historical yield context.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            CurrentDividend with yield, TTM dividend, and schedule info
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            div = await client.stocks.get_current_dividend("AAPL")
+            print(f"Yield: {div.dividend_yield}%")
+            print(f"TTM Dividends: ${div.dividends_per_share_ttm}")
+            print(f"Frequency: {div.frequency}")
+        """
+        data = await self.get_current_dividend_raw(symbol, bypass_cache=bypass_cache)
+        return CurrentDividend.from_api_response(data, symbol.upper().strip())
+
+    async def get_current_dividend_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw current dividend data for a stock.
+
+        Same as get_current_dividend() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.CURRENT_DIVIDEND, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/current_dividend")
+
+        # Cache the response
+        await cache.set(CacheCategory.CURRENT_DIVIDEND, symbol, value=data)
 
         return cast(dict[str, Any], data)
 

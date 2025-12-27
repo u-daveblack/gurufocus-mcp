@@ -8,8 +8,8 @@ This document tracks implementation status across both packages:
 
 | Package       | Implemented | Total | Progress |
 | ------------- | ----------- | ----- | -------- |
-| gurufocus-api | 10          | 52    | 19%      |
-| gurufocus-mcp | 8           | 52    | 15%      |
+| gurufocus-api | 12          | 52    | 23%      |
+| gurufocus-mcp | 11          | 52    | 21%      |
 
 ---
 
@@ -33,7 +33,7 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | `GET /stock/{symbol}/summary`    | ✅ `stocks.get_summary()`    | ✅ `get_stock_summary`     |                           |
 | `GET /stock/{symbol}/financials` | ✅ `stocks.get_financials()` | ✅ `get_stock_financials`  | Supports annual/quarterly |
 | `GET /stock/{symbol}/keyratios`  | ✅ `stocks.get_keyratios()`  | ✅ `get_stock_keyratios`   |                           |
-| `GET /stock/{symbol}/quote`      | ❌                           | ❌                         | Supports multiple symbols |
+| `GET /stock/{symbol}/quote`      | ✅ `stocks.get_quote()`      | ✅ `get_stock_quote`        | Real-time quote data      |
 
 ### Price & Volume Data
 
@@ -62,10 +62,10 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Dividend Data
 
-| Endpoint                               | API                        | MCP | Notes |
-| -------------------------------------- | -------------------------- | --- | ----- |
-| `GET /stock/{symbol}/dividend`         | ✅ `stocks.get_dividends()` | ❌   |       |
-| `GET /stock/{symbol}/current_dividend` | ❌                          | ❌   |       |
+| Endpoint                               | API                                 | MCP                               | Notes                   |
+| -------------------------------------- | ----------------------------------- | --------------------------------- | ----------------------- |
+| `GET /stock/{symbol}/dividend`         | ✅ `stocks.get_dividends()`          | ✅ `get_stock_dividend`            | Dividend history        |
+| `GET /stock/{symbol}/current_dividend` | ✅ `stocks.get_current_dividend()`   | ✅ `get_stock_current_dividend`    | Current yield & TTM div |
 
 ### Estimates & Forecasts
 
@@ -203,22 +203,22 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ## Implementation Summary by Category
 
-| Category              | API       | MCP      | Total Endpoints |
-| --------------------- | --------- | -------- | --------------- |
-| Stock Summary & Basic | 3/4       | 3/4      | 4               |
-| Price & Volume        | 1/4       | 0/4      | 4               |
-| Ownership             | 0/2       | 0/2      | 2               |
-| Trading Activity      | 4/4       | 3/4      | 4               |
-| Dividend              | 1/2       | 0/2      | 2               |
-| Estimates & Forecasts | 1/2       | 0/2      | 2               |
-| Operating & Segment   | 0/2       | 0/2      | 2               |
-| Indicators            | 0/2       | 0/2      | 2               |
-| News                  | 0/1       | 0/1      | 1               |
-| Guru Data             | 0/4       | 0/4      | 4               |
-| Insider Data          | 0/7       | 0/7      | 7               |
-| Politician Data       | 0/2       | 0/2      | 2               |
-| Economic Indicators   | 0/2       | 0/2      | 2               |
-| General Data          | 0/7       | 0/7      | 7               |
-| Personal Data         | 0/5       | 0/5      | 5               |
-| ETF Data              | 0/2       | 0/2      | 2               |
-| **Total**             | **10/52** | **6/52** | **52**          |
+| Category              | API       | MCP       | Total Endpoints |
+| --------------------- | --------- | --------- | --------------- |
+| Stock Summary & Basic | 4/4       | 4/4       | 4               |
+| Price & Volume        | 1/4       | 0/4       | 4               |
+| Ownership             | 0/2       | 0/2       | 2               |
+| Trading Activity      | 4/4       | 3/4       | 4               |
+| Dividend              | 2/2       | 2/2       | 2               |
+| Estimates & Forecasts | 1/2       | 0/2       | 2               |
+| Operating & Segment   | 0/2       | 0/2       | 2               |
+| Indicators            | 0/2       | 0/2       | 2               |
+| News                  | 0/1       | 0/1       | 1               |
+| Guru Data             | 0/4       | 0/4       | 4               |
+| Insider Data          | 0/7       | 0/7       | 7               |
+| Politician Data       | 0/2       | 0/2       | 2               |
+| Economic Indicators   | 0/2       | 0/2       | 2               |
+| General Data          | 0/7       | 0/7       | 7               |
+| Personal Data         | 0/5       | 0/5       | 5               |
+| ETF Data              | 0/2       | 0/2       | 2               |
+| **Total**             | **12/52** | **11/52** | **52**          |

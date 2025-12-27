@@ -14,6 +14,7 @@ from httpx import Response
 
 from gurufocus_api import (
     AnalystEstimates,
+    CurrentDividend,
     DividendHistory,
     ExecutiveList,
     GuruFocusClient,
@@ -21,6 +22,7 @@ from gurufocus_api import (
     InsiderTrades,
     PriceHistory,
     StockGurusResponse,
+    StockQuote,
 )
 
 # Load sample responses from fixtures
@@ -41,6 +43,93 @@ SAMPLE_INSIDERS_RESPONSE = load_fixture("insider")
 SAMPLE_GURUS_RESPONSE = load_fixture("gurus")
 SAMPLE_EXECUTIVES_RESPONSE = load_fixture("executives")
 SAMPLE_TRADES_HISTORY_RESPONSE = load_fixture("trades_history")
+SAMPLE_QUOTE_RESPONSE = load_fixture("quote")
+SAMPLE_CURRENT_DIVIDEND_RESPONSE = load_fixture("current_dividend")
+
+
+class TestQuoteEndpoint:
+    """Tests for quote endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_quote(self, cache_dir: Path) -> None:
+        """Test fetching quote returns typed model."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/quote").mock(
+            return_value=Response(200, json=SAMPLE_QUOTE_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            quote = await client.stocks.get_quote("FAKE1")
+
+            assert isinstance(quote, StockQuote)
+            assert quote.symbol == "FAKE1"
+            assert quote.current_price is not None
+            assert quote.current_price > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_quote_cached(self, cache_dir: Path) -> None:
+        """Test that quote is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/quote"
+        ).mock(return_value=Response(200, json=SAMPLE_QUOTE_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_quote("FAKE1")
+            await client.stocks.get_quote("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_quote_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw quote data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/quote").mock(
+            return_value=Response(200, json=SAMPLE_QUOTE_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_quote_raw("FAKE1")
+            assert isinstance(raw, dict)
+            assert "Current Price" in raw or "Price" in raw
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_quote_ohlv_data(self, cache_dir: Path) -> None:
+        """Test that quote contains OHLV data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/quote").mock(
+            return_value=Response(200, json=SAMPLE_QUOTE_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            quote = await client.stocks.get_quote("FAKE1")
+
+            assert quote.open is not None
+            assert quote.high is not None
+            assert quote.low is not None
+            assert quote.volume is not None
+            assert quote.volume > 0
 
 
 class TestAnalystEstimatesEndpoint:
@@ -174,6 +263,89 @@ class TestDividendsEndpoint:
             raw = await client.stocks.get_dividends_raw("FAKE1")
             # Real API returns array directly
             assert isinstance(raw, list)
+
+
+class TestCurrentDividendEndpoint:
+    """Tests for current dividend endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_current_dividend(self, cache_dir: Path) -> None:
+        """Test fetching current dividend returns typed model."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/current_dividend"
+        ).mock(return_value=Response(200, json=SAMPLE_CURRENT_DIVIDEND_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            current_div = await client.stocks.get_current_dividend("FAKE1")
+
+            assert isinstance(current_div, CurrentDividend)
+            assert current_div.symbol == "FAKE1"
+            assert current_div.dividend_yield is not None
+            assert current_div.dividend_yield > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_current_dividend_cached(self, cache_dir: Path) -> None:
+        """Test that current dividend is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/current_dividend"
+        ).mock(return_value=Response(200, json=SAMPLE_CURRENT_DIVIDEND_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_current_dividend("FAKE1")
+            await client.stocks.get_current_dividend("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_current_dividend_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw current dividend data."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/current_dividend"
+        ).mock(return_value=Response(200, json=SAMPLE_CURRENT_DIVIDEND_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_current_dividend_raw("FAKE1")
+            assert isinstance(raw, dict)
+            assert "Dividend Yield %" in raw
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_current_dividend_details(self, cache_dir: Path) -> None:
+        """Test that current dividend contains expected details."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/current_dividend"
+        ).mock(return_value=Response(200, json=SAMPLE_CURRENT_DIVIDEND_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            current_div = await client.stocks.get_current_dividend("FAKE1")
+
+            assert current_div.dividends_per_share_ttm is not None
+            assert current_div.frequency is not None
+            assert current_div.next_payment_date is not None
 
 
 class TestPriceHistoryEndpoint:
@@ -349,6 +521,12 @@ class TestInsiderTradesEndpoint:
 class TestModelsEdgeCases:
     """Tests for edge cases in model parsing."""
 
+    def test_quote_empty_response(self) -> None:
+        """Test parsing empty quote response."""
+        quote = StockQuote.from_api_response({}, "TEST")
+        assert quote.symbol == "TEST"
+        assert quote.current_price is None
+
     def test_estimates_empty_response(self) -> None:
         """Test parsing empty estimates response."""
         estimates = AnalystEstimates.from_api_response({}, "TEST")
@@ -360,6 +538,12 @@ class TestModelsEdgeCases:
         dividends = DividendHistory.from_api_response([], "TEST")
         assert dividends.symbol == "TEST"
         assert len(dividends.payments) == 0
+
+    def test_current_dividend_empty_response(self) -> None:
+        """Test parsing empty current dividend response."""
+        current_div = CurrentDividend.from_api_response({}, "TEST")
+        assert current_div.symbol == "TEST"
+        assert current_div.dividend_yield is None
 
     def test_price_history_empty_response(self) -> None:
         """Test parsing empty price history response."""
