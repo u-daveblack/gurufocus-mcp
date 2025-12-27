@@ -15,9 +15,11 @@ from httpx import Response
 from gurufocus_api import (
     AnalystEstimates,
     DividendHistory,
+    ExecutiveList,
     GuruFocusClient,
     InsiderTrades,
     PriceHistory,
+    StockGurusResponse,
 )
 
 # Load sample responses from fixtures
@@ -35,6 +37,8 @@ SAMPLE_ESTIMATES_RESPONSE = load_fixture("analyst_estimate")
 SAMPLE_DIVIDENDS_RESPONSE = load_fixture("dividend")
 SAMPLE_PRICE_RESPONSE = load_fixture("price")
 SAMPLE_INSIDERS_RESPONSE = load_fixture("insider")
+SAMPLE_GURUS_RESPONSE = load_fixture("gurus")
+SAMPLE_EXECUTIVES_RESPONSE = load_fixture("executives")
 
 
 class TestAnalystEstimatesEndpoint:
@@ -366,3 +370,205 @@ class TestModelsEdgeCases:
         insiders = InsiderTrades.from_api_response({}, "TEST")
         assert insiders.symbol == "TEST"
         assert len(insiders.trades) == 0
+
+    def test_gurus_empty_response(self) -> None:
+        """Test parsing empty gurus response."""
+        gurus = StockGurusResponse.from_api_response({}, "TEST")
+        assert gurus.symbol == "TEST"
+        assert len(gurus.picks) == 0
+        assert len(gurus.holdings) == 0
+
+    def test_executives_empty_response(self) -> None:
+        """Test parsing empty executives response."""
+        execs = ExecutiveList.from_api_response([], "TEST")
+        assert execs.symbol == "TEST"
+        assert len(execs.executives) == 0
+
+
+class TestGurusEndpoint:
+    """Tests for gurus endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_gurus(self, cache_dir: Path) -> None:
+        """Test fetching gurus returns typed model."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/gurus").mock(
+            return_value=Response(200, json=SAMPLE_GURUS_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            gurus = await client.stocks.get_gurus("FAKE1")
+
+            assert isinstance(gurus, StockGurusResponse)
+            assert gurus.symbol == "FAKE1"
+            # Response should have picks and holdings
+            assert len(gurus.picks) > 0
+            assert len(gurus.holdings) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_gurus_cached(self, cache_dir: Path) -> None:
+        """Test that gurus are cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/gurus"
+        ).mock(return_value=Response(200, json=SAMPLE_GURUS_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_gurus("FAKE1")
+            await client.stocks.get_gurus("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_gurus_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw gurus data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/gurus").mock(
+            return_value=Response(200, json=SAMPLE_GURUS_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_gurus_raw("FAKE1")
+            assert isinstance(raw, dict)
+            # API returns {symbol: {picks: [], holdings: []}}
+            assert "FAKE1" in raw
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_guru_pick_details(self, cache_dir: Path) -> None:
+        """Test that individual picks contain expected details."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/gurus").mock(
+            return_value=Response(200, json=SAMPLE_GURUS_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            gurus = await client.stocks.get_gurus("FAKE1")
+
+            pick = gurus.picks[0]
+            assert pick.guru is not None
+            assert pick.action is not None
+            assert pick.date is not None
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_guru_holding_details(self, cache_dir: Path) -> None:
+        """Test that individual holdings contain expected details."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/gurus").mock(
+            return_value=Response(200, json=SAMPLE_GURUS_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            gurus = await client.stocks.get_gurus("FAKE1")
+
+            holding = gurus.holdings[0]
+            assert holding.guru is not None
+            assert holding.current_shares is not None
+            assert holding.perc_assets is not None
+
+
+class TestExecutivesEndpoint:
+    """Tests for executives endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_executives(self, cache_dir: Path) -> None:
+        """Test fetching executives returns typed model."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/executives").mock(
+            return_value=Response(200, json=SAMPLE_EXECUTIVES_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            execs = await client.stocks.get_executives("FAKE1")
+
+            assert isinstance(execs, ExecutiveList)
+            assert execs.symbol == "FAKE1"
+            assert len(execs.executives) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_executives_cached(self, cache_dir: Path) -> None:
+        """Test that executives are cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/executives"
+        ).mock(return_value=Response(200, json=SAMPLE_EXECUTIVES_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_executives("FAKE1")
+            await client.stocks.get_executives("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_executives_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw executives data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/executives").mock(
+            return_value=Response(200, json=SAMPLE_EXECUTIVES_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_executives_raw("FAKE1")
+            # API returns array directly
+            assert isinstance(raw, list)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_executive_details(self, cache_dir: Path) -> None:
+        """Test that individual executives contain expected details."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/executives").mock(
+            return_value=Response(200, json=SAMPLE_EXECUTIVES_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            execs = await client.stocks.get_executives("FAKE1")
+
+            exec = execs.executives[0]
+            assert exec.name is not None
+            assert exec.position is not None
+            assert exec.transaction_date is not None
