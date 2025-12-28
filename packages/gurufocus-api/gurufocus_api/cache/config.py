@@ -53,6 +53,15 @@ class CacheCategory(Enum):
     DIVIDENDS = "dividends"
     INSIDERS = "insiders"
 
+    # Insider activity (refresh daily as new SEC filings arrive)
+    INSIDER_UPDATES = "insider_updates"
+    INSIDER_CEO_BUYS = "insider_ceo_buys"
+    INSIDER_CFO_BUYS = "insider_cfo_buys"
+    INSIDER_CLUSTER_BUY = "insider_cluster_buy"
+    INSIDER_DOUBLE = "insider_double"
+    INSIDER_TRIPLE = "insider_triple"
+    INSIDER_LIST = "insider_list"
+
     # Static (refresh monthly)
     PROFILE = "profile"
     GURUS = "gurus"
@@ -129,6 +138,35 @@ _CACHE_CONFIGS: dict[CacheCategory, CacheConfig] = {
     CacheCategory.INSIDERS: CacheConfig(
         tier=CacheTier.EARNINGS_DEPENDENT,
         ttl=timedelta(days=7),  # Insider trades filed within days
+    ),
+    # Insider activity endpoints (daily refresh for fresh SEC filings)
+    CacheCategory.INSIDER_UPDATES: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # New updates arrive daily
+    ),
+    CacheCategory.INSIDER_CEO_BUYS: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # CEO buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_CFO_BUYS: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # CFO buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_CLUSTER_BUY: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Cluster buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_DOUBLE: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Double-down buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_TRIPLE: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Triple-down buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_LIST: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=7),  # Insider list changes infrequently
     ),
     CacheCategory.PRICE_HISTORY: CacheConfig(
         tier=CacheTier.PRICE_DEPENDENT,

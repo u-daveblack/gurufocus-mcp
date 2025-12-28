@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `stocks.get_price_ohlc()` - Historical OHLC price bars with volume for technical analysis
 - `stocks.get_volume()` - Historical trading volume data
 - `stocks.get_unadjusted_price()` - Historical unadjusted (pre-split) prices
+- New `InsidersEndpoint` class with 7 insider activity methods:
+  - `insiders.get_updates()` - Recent insider transaction updates
+  - `insiders.get_ceo_buys()` - CEO buy transactions
+  - `insiders.get_cfo_buys()` - CFO buy transactions
+  - `insiders.get_cluster_buys()` - Cluster buy signals (multiple insiders buying)
+  - `insiders.get_double_buys()` - Double-down buy signals
+  - `insiders.get_triple_buys()` - Triple-down buy signals
+  - `insiders.get_list()` - List of known insiders
 
 #### gurufocus-mcp
 - `get_stock_quote` - MCP tool for real-time stock quotes
@@ -23,6 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_stock_price_ohlc` - MCP tool for OHLC price history with date range support
 - `get_stock_volume` - MCP tool for volume history with date range support
 - `get_stock_unadjusted_price` - MCP tool for unadjusted price history
+- 7 new insider activity tools:
+  - `get_insider_updates` - Recent insider transactions
+  - `get_insider_ceo_buys` - CEO buy transactions (bullish signal)
+  - `get_insider_cfo_buys` - CFO buy transactions
+  - `get_insider_cluster_buys` - Cluster buy signals
+  - `get_insider_double_buys` - Double-down buy signals
+  - `get_insider_triple_buys` - Triple-down buy signals
+  - `get_insider_list` - Browse known insiders
 
 ## [v0.3.0] - 2025-12-27
 

@@ -42,7 +42,7 @@ class TestMCPProtocolCompliance:
         """Test that list_tools returns all stock tools."""
         tools = await client.list_tools()
 
-        assert len(tools) == 14
+        assert len(tools) == 21
         tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
         assert "get_stock_quote" in tool_names
