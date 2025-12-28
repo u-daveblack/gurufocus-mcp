@@ -1,6 +1,7 @@
 """Pydantic models for GuruFocus API responses."""
 
 from .dividends import (
+    CurrentDividend,
     DividendHistory,
     DividendPayment,
 )
@@ -30,6 +31,20 @@ from .gurus import (
     StockGurus,
     StockGurusResponse,
 )
+from .insider_updates import (
+    ClusterBuyResponse,
+    ClusterBuySignal,
+    DoubleBuyResponse,
+    DoubleBuySignal,
+    InsiderBuysResponse,
+    InsiderBuyTransaction,
+    InsiderInfo,
+    InsiderListResponse,
+    InsiderUpdate,
+    InsiderUpdatesResponse,
+    TripleBuyResponse,
+    TripleBuySignal,
+)
 from .insiders import (
     InsiderTrade,
     InsiderTrades,
@@ -46,9 +61,20 @@ from .keyratios import (
     SolvencyRatios,
     ValuationRatios,
 )
+from .ohlc import (
+    OHLCBar,
+    OHLCHistory,
+    UnadjustedPriceHistory,
+    UnadjustedPricePoint,
+    VolumeHistory,
+    VolumePoint,
+)
 from .price import (
     PriceHistory,
     PricePoint,
+)
+from .quote import (
+    StockQuote,
 )
 from .screener import (
     FilterBuilder,
@@ -84,9 +110,14 @@ from .trades_history import (
 
 __all__ = [
     "AnalystEstimates",
+    "ClusterBuyResponse",
+    "ClusterBuySignal",
+    "CurrentDividend",
     "DividendHistory",
     "DividendMetrics",
     "DividendPayment",
+    "DoubleBuyResponse",
+    "DoubleBuySignal",
     "EfficiencyRatios",
     "EstimatePeriod",
     "Executive",
@@ -107,11 +138,19 @@ __all__ = [
     "GuruTradeAction",
     "GuruTrades",
     "GuruTradesHistory",
+    "InsiderBuyTransaction",
+    "InsiderBuysResponse",
+    "InsiderInfo",
+    "InsiderListResponse",
     "InsiderTrade",
     "InsiderTrades",
+    "InsiderUpdate",
+    "InsiderUpdatesResponse",
     "InstitutionalActivity",
     "KeyRatios",
     "LiquidityRatios",
+    "OHLCBar",
+    "OHLCHistory",
     "PerShareData",
     "PriceHistory",
     "PriceInfo",
@@ -133,10 +172,17 @@ __all__ = [
     "StockGuruPick",
     "StockGurus",
     "StockGurusResponse",
+    "StockQuote",
     "StockSummary",
     "TradesHistoryPeriod",
+    "TripleBuyResponse",
+    "TripleBuySignal",
+    "UnadjustedPriceHistory",
+    "UnadjustedPricePoint",
     "ValuationMetrics",
     "ValuationRatios",
+    "VolumeHistory",
+    "VolumePoint",
     "deep_value_filters",
     "dividend_filters",
     "growth_filters",

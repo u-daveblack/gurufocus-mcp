@@ -8,8 +8,8 @@ This document tracks implementation status across both packages:
 
 | Package       | Implemented | Total | Progress |
 | ------------- | ----------- | ----- | -------- |
-| gurufocus-api | 10          | 52    | 19%      |
-| gurufocus-mcp | 8           | 52    | 15%      |
+| gurufocus-api | 22          | 52    | 42%      |
+| gurufocus-mcp | 21          | 52    | 40%      |
 
 ---
 
@@ -33,16 +33,16 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | `GET /stock/{symbol}/summary`    | ✅ `stocks.get_summary()`    | ✅ `get_stock_summary`     |                           |
 | `GET /stock/{symbol}/financials` | ✅ `stocks.get_financials()` | ✅ `get_stock_financials`  | Supports annual/quarterly |
 | `GET /stock/{symbol}/keyratios`  | ✅ `stocks.get_keyratios()`  | ✅ `get_stock_keyratios`   |                           |
-| `GET /stock/{symbol}/quote`      | ❌                           | ❌                         | Supports multiple symbols |
+| `GET /stock/{symbol}/quote`      | ✅ `stocks.get_quote()`      | ✅ `get_stock_quote`        | Real-time quote data      |
 
 ### Price & Volume Data
 
-| Endpoint                               | API                            | MCP | Notes              |
-| -------------------------------------- | ------------------------------ | --- | ------------------ |
-| `GET /stock/{symbol}/price`            | ✅ `stocks.get_price_history()` | ❌   |                    |
-| `GET /stock/{symbol}/unadjusted_price` | ❌                              | ❌   |                    |
-| `GET /stock/{symbol}/price_ohlc`       | ❌                              | ❌   | Full OHLC + volume |
-| `GET /stock/{symbol}/volume`           | ❌                              | ❌   |                    |
+| Endpoint                               | API                                 | MCP                             | Notes                        |
+| -------------------------------------- | ----------------------------------- | ------------------------------- | ---------------------------- |
+| `GET /stock/{symbol}/price`            | ✅ `stocks.get_price_history()`      | ❌                               | Supports start_date/end_date |
+| `GET /stock/{symbol}/unadjusted_price` | ✅ `stocks.get_unadjusted_price()`   | ✅ `get_stock_unadjusted_price`  | Supports start_date/end_date |
+| `GET /stock/{symbol}/price_ohlc`       | ✅ `stocks.get_price_ohlc()`         | ✅ `get_stock_price_ohlc`        | Full OHLC + volume           |
+| `GET /stock/{symbol}/volume`           | ✅ `stocks.get_volume()`             | ✅ `get_stock_volume`            | Supports start_date/end_date |
 
 ### Ownership Data
 
@@ -62,10 +62,10 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Dividend Data
 
-| Endpoint                               | API                        | MCP | Notes |
-| -------------------------------------- | -------------------------- | --- | ----- |
-| `GET /stock/{symbol}/dividend`         | ✅ `stocks.get_dividends()` | ❌   |       |
-| `GET /stock/{symbol}/current_dividend` | ❌                          | ❌   |       |
+| Endpoint                               | API                                 | MCP                               | Notes                   |
+| -------------------------------------- | ----------------------------------- | --------------------------------- | ----------------------- |
+| `GET /stock/{symbol}/dividend`         | ✅ `stocks.get_dividends()`          | ✅ `get_stock_dividend`            | Dividend history        |
+| `GET /stock/{symbol}/current_dividend` | ✅ `stocks.get_current_dividend()`   | ✅ `get_stock_current_dividend`    | Current yield & TTM div |
 
 ### Estimates & Forecasts
 
@@ -109,15 +109,15 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Insider Data
 
-| Endpoint                                | API | MCP | Notes                                                            |
-| --------------------------------------- | --- | --- | ---------------------------------------------------------------- |
-| `GET /insider_updates`                  | ❌   | ❌   | Optional: `page`, `date`, `region`, `file_date`, `sort`, `order` |
-| `GET /insider_buys/insider_ceo`         | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_buys/insider_cfo`         | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_buys/insider_cluster_buy` | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_buys/insider_double`      | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_buys/insider_triple`      | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_list`                     | ❌   | ❌   | Optional: `page`                                                 |
+| Endpoint                                | API                               | MCP                          | Notes                                                            |
+| --------------------------------------- | --------------------------------- | ---------------------------- | ---------------------------------------------------------------- |
+| `GET /insider_updates`                  | ✅ `insiders.get_updates()`        | ✅ `get_insider_updates`      | Optional: `page`, `date`, `region`, `file_date`, `sort`, `order` |
+| `GET /insider_buys/insider_ceo`         | ✅ `insiders.get_ceo_buys()`       | ✅ `get_insider_ceo_buys`     | Optional: `page`, `within_days`                                  |
+| `GET /insider_buys/insider_cfo`         | ✅ `insiders.get_cfo_buys()`       | ✅ `get_insider_cfo_buys`     | Optional: `page`, `within_days`                                  |
+| `GET /insider_buys/insider_cluster_buy` | ✅ `insiders.get_cluster_buys()`   | ✅ `get_insider_cluster_buys` | Optional: `page`, `within_days`                                  |
+| `GET /insider_buys/insider_double`      | ✅ `insiders.get_double_buys()`    | ✅ `get_insider_double_buys`  | Optional: `page`, `within_days`                                  |
+| `GET /insider_buys/insider_triple`      | ✅ `insiders.get_triple_buys()`    | ✅ `get_insider_triple_buys`  | Optional: `page`, `within_days`                                  |
+| `GET /insider_list`                     | ✅ `insiders.get_list()`           | ✅ `get_insider_list`         | Optional: `page`                                                 |
 
 ### Politician Data
 
@@ -203,22 +203,22 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ## Implementation Summary by Category
 
-| Category              | API       | MCP      | Total Endpoints |
-| --------------------- | --------- | -------- | --------------- |
-| Stock Summary & Basic | 3/4       | 3/4      | 4               |
-| Price & Volume        | 1/4       | 0/4      | 4               |
-| Ownership             | 0/2       | 0/2      | 2               |
-| Trading Activity      | 4/4       | 3/4      | 4               |
-| Dividend              | 1/2       | 0/2      | 2               |
-| Estimates & Forecasts | 1/2       | 0/2      | 2               |
-| Operating & Segment   | 0/2       | 0/2      | 2               |
-| Indicators            | 0/2       | 0/2      | 2               |
-| News                  | 0/1       | 0/1      | 1               |
-| Guru Data             | 0/4       | 0/4      | 4               |
-| Insider Data          | 0/7       | 0/7      | 7               |
-| Politician Data       | 0/2       | 0/2      | 2               |
-| Economic Indicators   | 0/2       | 0/2      | 2               |
-| General Data          | 0/7       | 0/7      | 7               |
-| Personal Data         | 0/5       | 0/5      | 5               |
-| ETF Data              | 0/2       | 0/2      | 2               |
-| **Total**             | **10/52** | **6/52** | **52**          |
+| Category              | API       | MCP       | Total Endpoints |
+| --------------------- | --------- | --------- | --------------- |
+| Stock Summary & Basic | 4/4       | 4/4       | 4               |
+| Price & Volume        | 4/4       | 3/4       | 4               |
+| Ownership             | 0/2       | 0/2       | 2               |
+| Trading Activity      | 4/4       | 3/4       | 4               |
+| Dividend              | 2/2       | 2/2       | 2               |
+| Estimates & Forecasts | 1/2       | 0/2       | 2               |
+| Operating & Segment   | 0/2       | 0/2       | 2               |
+| Indicators            | 0/2       | 0/2       | 2               |
+| News                  | 0/1       | 0/1       | 1               |
+| Guru Data             | 0/4       | 0/4       | 4               |
+| Insider Data          | 7/7       | 7/7       | 7               |
+| Politician Data       | 0/2       | 0/2       | 2               |
+| Economic Indicators   | 0/2       | 0/2       | 2               |
+| General Data          | 0/7       | 0/7       | 7               |
+| Personal Data         | 0/5       | 0/5       | 5               |
+| ETF Data              | 0/2       | 0/2       | 2               |
+| **Total**             | **22/52** | **21/52** | **52**          |

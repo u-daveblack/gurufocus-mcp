@@ -3,14 +3,16 @@
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from ..cache.config import CacheCategory
-from ..models.dividends import DividendHistory
+from ..models.dividends import CurrentDividend, DividendHistory
 from ..models.estimates import AnalystEstimates
 from ..models.executives import ExecutiveList
 from ..models.financials import FinancialStatements
 from ..models.gurus import StockGurusResponse
 from ..models.insiders import InsiderTrades
 from ..models.keyratios import KeyRatios
+from ..models.ohlc import OHLCHistory, UnadjustedPriceHistory, VolumeHistory
 from ..models.price import PriceHistory
+from ..models.quote import StockQuote
 from ..models.summary import StockSummary
 from ..models.trades_history import GuruTradesHistory
 
@@ -103,6 +105,72 @@ class StocksEndpoint:
 
         # Cache the response
         await cache.set(CacheCategory.SUMMARY, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_quote(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> StockQuote:
+        """Get real-time quote data for a stock.
+
+        Retrieves current price, daily OHLV data, and price changes.
+        This is a lightweight alternative to get_summary() when you
+        only need current market data.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            StockQuote with current price, OHLV, and change data
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            quote = await client.stocks.get_quote("AAPL")
+            print(f"Price: ${quote.current_price}")
+            print(f"Change: {quote.price_change_pct}%")
+            print(f"Volume: {quote.volume:,}")
+        """
+        data = await self.get_quote_raw(symbol, bypass_cache=bypass_cache)
+        return StockQuote.from_api_response(data, symbol.upper().strip())
+
+    async def get_quote_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw quote data for a stock.
+
+        Same as get_quote() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.QUOTE, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/quote")
+
+        # Cache the response
+        await cache.set(CacheCategory.QUOTE, symbol, value=data)
 
         return cast(dict[str, Any], data)
 
@@ -379,6 +447,71 @@ class StocksEndpoint:
 
         # Cache the response
         await cache.set(CacheCategory.DIVIDENDS, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_current_dividend(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> CurrentDividend:
+        """Get current dividend information for a stock.
+
+        Retrieves current dividend yield, TTM dividend per share,
+        payment schedule, and historical yield context.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            CurrentDividend with yield, TTM dividend, and schedule info
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            div = await client.stocks.get_current_dividend("AAPL")
+            print(f"Yield: {div.dividend_yield}%")
+            print(f"TTM Dividends: ${div.dividends_per_share_ttm}")
+            print(f"Frequency: {div.frequency}")
+        """
+        data = await self.get_current_dividend_raw(symbol, bypass_cache=bypass_cache)
+        return CurrentDividend.from_api_response(data, symbol.upper().strip())
+
+    async def get_current_dividend_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw current dividend data for a stock.
+
+        Same as get_current_dividend() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.CURRENT_DIVIDEND, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/current_dividend")
+
+        # Cache the response
+        await cache.set(CacheCategory.CURRENT_DIVIDEND, symbol, value=data)
 
         return cast(dict[str, Any], data)
 
@@ -711,3 +844,264 @@ class StocksEndpoint:
         await cache.set(CacheCategory.TRADES_HISTORY, symbol, value=data)
 
         return cast(list[dict[str, Any]], data)
+
+    async def get_price_ohlc(
+        self,
+        symbol: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        bypass_cache: bool = False,
+    ) -> OHLCHistory:
+        """Get OHLC price history for a stock.
+
+        Retrieves daily Open-High-Low-Close price data with volume
+        for the specified date range.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            start_date: Start date in YYYYMMDD format (e.g., "20250101")
+            end_date: End date in YYYYMMDD format (e.g., "20251231")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            OHLCHistory with daily OHLC bars and volume
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            ohlc = await client.stocks.get_price_ohlc(
+                "AAPL",
+                start_date="20250101",
+                end_date="20250131"
+            )
+            for bar in ohlc.bars[:5]:
+                print(f"{bar.date}: O:{bar.open} H:{bar.high} L:{bar.low} C:{bar.close}")
+        """
+        data = await self.get_price_ohlc_raw(
+            symbol, start_date=start_date, end_date=end_date, bypass_cache=bypass_cache
+        )
+        return OHLCHistory.from_api_response(data, symbol.upper().strip())
+
+    async def get_price_ohlc_raw(
+        self,
+        symbol: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        bypass_cache: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Get raw OHLC price history data for a stock.
+
+        Same as get_price_ohlc() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            start_date: Start date in YYYYMMDD format
+            end_date: End date in YYYYMMDD format
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a list of dictionaries
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+        cache_key = f"{symbol}:{start_date or ''}:{end_date or ''}"
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.PRICE_OHLC, cache_key)
+            if cached_data is not None:
+                return cast(list[dict[str, Any]], cached_data)
+
+        # Build API endpoint with params
+        params: dict[str, str] = {}
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+
+        # Fetch from API
+        data = await self._client.get(
+            f"stock/{symbol}/price_ohlc", params=params if params else None
+        )
+
+        # Cache the response
+        await cache.set(CacheCategory.PRICE_OHLC, cache_key, value=data)
+
+        return cast(list[dict[str, Any]], data)
+
+    async def get_volume(
+        self,
+        symbol: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        bypass_cache: bool = False,
+    ) -> VolumeHistory:
+        """Get volume history for a stock.
+
+        Retrieves daily trading volume data for the specified date range.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            start_date: Start date in YYYYMMDD format (e.g., "20250101")
+            end_date: End date in YYYYMMDD format (e.g., "20251231")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            VolumeHistory with daily volume data points
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            volume = await client.stocks.get_volume(
+                "AAPL",
+                start_date="20250101",
+                end_date="20250131"
+            )
+            for point in volume.data[:5]:
+                print(f"{point.date}: {point.volume:,} shares")
+        """
+        data = await self.get_volume_raw(
+            symbol, start_date=start_date, end_date=end_date, bypass_cache=bypass_cache
+        )
+        return VolumeHistory.from_api_response(data, symbol.upper().strip())
+
+    async def get_volume_raw(
+        self,
+        symbol: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        bypass_cache: bool = False,
+    ) -> list[list[Any]]:
+        """Get raw volume history data for a stock.
+
+        Same as get_volume() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            start_date: Start date in YYYYMMDD format
+            end_date: End date in YYYYMMDD format
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a list of [date, volume] arrays
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+        cache_key = f"{symbol}:{start_date or ''}:{end_date or ''}"
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.VOLUME, cache_key)
+            if cached_data is not None:
+                return cast(list[list[Any]], cached_data)
+
+        # Build API endpoint with params
+        params: dict[str, str] = {}
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/volume", params=params if params else None)
+
+        # Cache the response
+        await cache.set(CacheCategory.VOLUME, cache_key, value=data)
+
+        return cast(list[list[Any]], data)
+
+    async def get_unadjusted_price(
+        self,
+        symbol: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        bypass_cache: bool = False,
+    ) -> UnadjustedPriceHistory:
+        """Get unadjusted price history for a stock.
+
+        Retrieves daily unadjusted (pre-split) price data for the
+        specified date range.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            start_date: Start date in YYYYMMDD format (e.g., "20250101")
+            end_date: End date in YYYYMMDD format (e.g., "20251231")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            UnadjustedPriceHistory with daily price points
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            prices = await client.stocks.get_unadjusted_price(
+                "AAPL",
+                start_date="20250101",
+                end_date="20250131"
+            )
+            for point in prices.prices[:5]:
+                print(f"{point.date}: ${point.price}")
+        """
+        data = await self.get_unadjusted_price_raw(
+            symbol, start_date=start_date, end_date=end_date, bypass_cache=bypass_cache
+        )
+        return UnadjustedPriceHistory.from_api_response(data, symbol.upper().strip())
+
+    async def get_unadjusted_price_raw(
+        self,
+        symbol: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        bypass_cache: bool = False,
+    ) -> list[list[Any]]:
+        """Get raw unadjusted price history data for a stock.
+
+        Same as get_unadjusted_price() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            start_date: Start date in YYYYMMDD format
+            end_date: End date in YYYYMMDD format
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a list of [date, price] arrays
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+        cache_key = f"{symbol}:{start_date or ''}:{end_date or ''}"
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.UNADJUSTED_PRICE, cache_key)
+            if cached_data is not None:
+                return cast(list[list[Any]], cached_data)
+
+        # Build API endpoint with params
+        params: dict[str, str] = {}
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+
+        # Fetch from API
+        data = await self._client.get(
+            f"stock/{symbol}/unadjusted_price", params=params if params else None
+        )
+
+        # Cache the response
+        await cache.set(CacheCategory.UNADJUSTED_PRICE, cache_key, value=data)
+
+        return cast(list[list[Any]], data)

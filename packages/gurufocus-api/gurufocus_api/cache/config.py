@@ -35,6 +35,12 @@ class CacheCategory(Enum):
     VALUATION_RATIOS = "valuation_ratios"
     MARKET_DATA = "market_data"
     PRICE_HISTORY = "price_history"
+    PRICE_OHLC = "price_ohlc"
+    VOLUME = "volume"
+    UNADJUSTED_PRICE = "unadjusted_price"
+
+    # Price-dependent (short TTL as it changes with stock price)
+    CURRENT_DIVIDEND = "current_dividend"
 
     # Earnings-dependent (refresh quarterly or after earnings)
     SUMMARY = "summary"
@@ -46,6 +52,15 @@ class CacheCategory(Enum):
     GF_SCORE = "gf_score"
     DIVIDENDS = "dividends"
     INSIDERS = "insiders"
+
+    # Insider activity (refresh daily as new SEC filings arrive)
+    INSIDER_UPDATES = "insider_updates"
+    INSIDER_CEO_BUYS = "insider_ceo_buys"
+    INSIDER_CFO_BUYS = "insider_cfo_buys"
+    INSIDER_CLUSTER_BUY = "insider_cluster_buy"
+    INSIDER_DOUBLE = "insider_double"
+    INSIDER_TRIPLE = "insider_triple"
+    INSIDER_LIST = "insider_list"
 
     # Static (refresh monthly)
     PROFILE = "profile"
@@ -124,9 +139,54 @@ _CACHE_CONFIGS: dict[CacheCategory, CacheConfig] = {
         tier=CacheTier.EARNINGS_DEPENDENT,
         ttl=timedelta(days=7),  # Insider trades filed within days
     ),
+    # Insider activity endpoints (daily refresh for fresh SEC filings)
+    CacheCategory.INSIDER_UPDATES: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # New updates arrive daily
+    ),
+    CacheCategory.INSIDER_CEO_BUYS: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # CEO buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_CFO_BUYS: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # CFO buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_CLUSTER_BUY: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Cluster buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_DOUBLE: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Double-down buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_TRIPLE: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Triple-down buys are time-sensitive signals
+    ),
+    CacheCategory.INSIDER_LIST: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=7),  # Insider list changes infrequently
+    ),
     CacheCategory.PRICE_HISTORY: CacheConfig(
         tier=CacheTier.PRICE_DEPENDENT,
         ttl=timedelta(days=1),  # Price data updates daily
+    ),
+    CacheCategory.PRICE_OHLC: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(days=1),  # OHLC data updates daily
+    ),
+    CacheCategory.VOLUME: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(days=1),  # Volume data updates daily
+    ),
+    CacheCategory.UNADJUSTED_PRICE: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(days=1),  # Unadjusted prices update daily
+    ),
+    CacheCategory.CURRENT_DIVIDEND: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(days=1),  # Yield changes with price
     ),
     # TIER 3: Static (monthly+)
     CacheCategory.PROFILE: CacheConfig(

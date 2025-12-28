@@ -40,6 +40,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     from .cache import CacheManager
+    from .endpoints.insiders import InsidersEndpoint
     from .endpoints.stocks import StocksEndpoint
     from .rate_limiter import RateLimiter
 
@@ -158,6 +159,7 @@ class GuruFocusClient:
 
         # Endpoint instances (lazily initialized)
         self._stocks: StocksEndpoint | None = None
+        self._insiders: InsidersEndpoint | None = None
 
     @property
     def cache(self) -> CacheManager:
@@ -220,6 +222,23 @@ class GuruFocusClient:
 
             self._stocks = StocksEndpoint(self)
         return self._stocks
+
+    @property
+    def insiders(self) -> InsidersEndpoint:
+        """Access insider activity endpoints.
+
+        Returns:
+            InsidersEndpoint instance for fetching insider trading data
+
+        Example:
+            updates = await client.insiders.get_updates()
+            ceo_buys = await client.insiders.get_ceo_buys()
+        """
+        if self._insiders is None:
+            from .endpoints.insiders import InsidersEndpoint
+
+            self._insiders = InsidersEndpoint(self)
+        return self._insiders
 
     @property
     def is_connected(self) -> bool:
