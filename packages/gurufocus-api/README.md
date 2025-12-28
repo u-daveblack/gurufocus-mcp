@@ -12,24 +12,43 @@ A Python client library for the GuruFocus API with async support, Pydantic model
 
 ## Implementation Status
 
-**Progress: 10 of 52 endpoints (19%)**
+**Progress: 22 of 52 endpoints (42%)**
 
 See [Implementation Tracker](../../docs/implementation_tracker.md) for full details.
 
-### Implemented Endpoints
+### Stock Endpoints
 
 | Endpoint                               | Method                           |
 | -------------------------------------- | -------------------------------- |
 | `GET /stock/{symbol}/summary`          | `stocks.get_summary()`           |
 | `GET /stock/{symbol}/financials`       | `stocks.get_financials()`        |
 | `GET /stock/{symbol}/keyratios`        | `stocks.get_keyratios()`         |
+| `GET /stock/{symbol}/quote`            | `stocks.get_quote()`             |
 | `GET /stock/{symbol}/price`            | `stocks.get_price_history()`     |
+| `GET /stock/{symbol}/price_ohlc`       | `stocks.get_price_ohlc()`        |
+| `GET /stock/{symbol}/volume`           | `stocks.get_volume()`            |
+| `GET /stock/{symbol}/unadjusted_price` | `stocks.get_unadjusted_price()`  |
 | `GET /stock/{symbol}/analyst_estimate` | `stocks.get_analyst_estimates()` |
 | `GET /stock/{symbol}/dividend`         | `stocks.get_dividends()`         |
+| `GET /stock/{symbol}/current_dividend` | `stocks.get_current_dividend()`  |
 | `GET /stock/{symbol}/insider`          | `stocks.get_insider_trades()`    |
 | `GET /stock/{symbol}/gurus`            | `stocks.get_gurus()`             |
 | `GET /stock/{symbol}/executives`       | `stocks.get_executives()`        |
 | `GET /stock/{symbol}/trades/history`   | `stocks.get_trades_history()`    |
+
+### Insider Activity Endpoints
+
+| Endpoint                                | Method                        |
+| --------------------------------------- | ----------------------------- |
+| `GET /insider_updates`                  | `insiders.get_updates()`      |
+| `GET /insider_buys/insider_ceo`         | `insiders.get_ceo_buys()`     |
+| `GET /insider_buys/insider_cfo`         | `insiders.get_cfo_buys()`     |
+| `GET /insider_buys/insider_cluster_buy` | `insiders.get_cluster_buys()` |
+| `GET /insider_buys/insider_double`      | `insiders.get_double_buys()`  |
+| `GET /insider_buys/insider_triple`      | `insiders.get_triple_buys()`  |
+| `GET /insider_list`                     | `insiders.get_list()`         |
+
+All insider endpoints support pagination with async iterators (e.g., `insiders.iter_ceo_buys()`).
 
 ## Installation
 

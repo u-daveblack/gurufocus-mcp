@@ -8,8 +8,8 @@ This document tracks implementation status across both packages:
 
 | Package       | Implemented | Total | Progress |
 | ------------- | ----------- | ----- | -------- |
-| gurufocus-api | 15          | 52    | 29%      |
-| gurufocus-mcp | 14          | 52    | 27%      |
+| gurufocus-api | 22          | 52    | 42%      |
+| gurufocus-mcp | 21          | 52    | 40%      |
 
 ---
 
@@ -109,15 +109,15 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Insider Data
 
-| Endpoint                                | API | MCP | Notes                                                            |
-| --------------------------------------- | --- | --- | ---------------------------------------------------------------- |
-| `GET /insider_updates`                  | ❌   | ❌   | Optional: `page`, `date`, `region`, `file_date`, `sort`, `order` |
-| `GET /insider_buys/insider_ceo`         | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_buys/insider_cfo`         | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_buys/insider_cluster_buy` | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_buys/insider_double`      | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_buys/insider_triple`      | ❌   | ❌   | Optional: `page`, `within_days`                                  |
-| `GET /insider_list`                     | ❌   | ❌   | Optional: `page`                                                 |
+| Endpoint                                | API                               | MCP                          | Notes                                                            |
+| --------------------------------------- | --------------------------------- | ---------------------------- | ---------------------------------------------------------------- |
+| `GET /insider_updates`                  | ✅ `insiders.get_updates()`        | ✅ `get_insider_updates`      | Optional: `page`, `date`, `region`, `file_date`, `sort`, `order` |
+| `GET /insider_buys/insider_ceo`         | ✅ `insiders.get_ceo_buys()`       | ✅ `get_insider_ceo_buys`     | Optional: `page`, `within_days`                                  |
+| `GET /insider_buys/insider_cfo`         | ✅ `insiders.get_cfo_buys()`       | ✅ `get_insider_cfo_buys`     | Optional: `page`, `within_days`                                  |
+| `GET /insider_buys/insider_cluster_buy` | ✅ `insiders.get_cluster_buys()`   | ✅ `get_insider_cluster_buys` | Optional: `page`, `within_days`                                  |
+| `GET /insider_buys/insider_double`      | ✅ `insiders.get_double_buys()`    | ✅ `get_insider_double_buys`  | Optional: `page`, `within_days`                                  |
+| `GET /insider_buys/insider_triple`      | ✅ `insiders.get_triple_buys()`    | ✅ `get_insider_triple_buys`  | Optional: `page`, `within_days`                                  |
+| `GET /insider_list`                     | ✅ `insiders.get_list()`           | ✅ `get_insider_list`         | Optional: `page`                                                 |
 
 ### Politician Data
 
@@ -215,10 +215,10 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | Indicators            | 0/2       | 0/2       | 2               |
 | News                  | 0/1       | 0/1       | 1               |
 | Guru Data             | 0/4       | 0/4       | 4               |
-| Insider Data          | 0/7       | 0/7       | 7               |
+| Insider Data          | 7/7       | 7/7       | 7               |
 | Politician Data       | 0/2       | 0/2       | 2               |
 | Economic Indicators   | 0/2       | 0/2       | 2               |
 | General Data          | 0/7       | 0/7       | 7               |
 | Personal Data         | 0/5       | 0/5       | 5               |
 | ETF Data              | 0/2       | 0/2       | 2               |
-| **Total**             | **15/52** | **14/52** | **52**          |
+| **Total**             | **22/52** | **21/52** | **52**          |

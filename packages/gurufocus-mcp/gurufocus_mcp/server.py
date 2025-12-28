@@ -15,7 +15,7 @@ from gurufocus_api.logging import configure_logging, get_logger
 from .config import MCPServerSettings, get_settings
 from .prompts import register_prompts
 from .resources import register_stock_resources
-from .tools import register_analysis_tools, register_stock_tools
+from .tools import register_analysis_tools, register_insider_tools, register_stock_tools
 
 # Module-level state for the default server
 _default_settings: MCPServerSettings | None = None
@@ -54,8 +54,9 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
             yield
             return
 
-        # Create and share the GuruFocus client
-        client = GuruFocusClient(
+        # Create and share the GuruFocus client using async context manager
+        # to ensure proper cleanup of SQLite cache connections
+        async with GuruFocusClient(
             api_token=_default_settings.api_token,
             base_url=_default_settings.api_base_url,
             timeout=_default_settings.api_timeout,
@@ -65,16 +66,15 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
             rate_limit_enabled=_default_settings.rate_limit_enabled,
             rate_limit_rpm=_default_settings.rate_limit_rpm,
             rate_limit_daily=_default_settings.rate_limit_daily,
-        )
+        ) as client:
+            # Store client on server instance (accessible via ctx.fastmcp.state)
+            mcp.state = {"client": client}  # type: ignore[attr-defined]
+            logger.debug("gurufocus_client_initialized")
 
-        # Store client on server instance (accessible via ctx.fastmcp.state)
-        mcp.state = {"client": client}  # type: ignore[attr-defined]
-        logger.debug("gurufocus_client_initialized")
+            yield
 
-        yield
-
-        # Cleanup
-        mcp.state = {"client": None}  # type: ignore[attr-defined]
+            # Cleanup state reference (client closed automatically by context manager)
+            mcp.state = {"client": None}  # type: ignore[attr-defined]
 
     # Create the MCP server with lifespan
     mcp = FastMCP(
@@ -86,6 +86,7 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
     # Register tools and resources
     register_stock_tools(mcp)
     register_analysis_tools(mcp)
+    register_insider_tools(mcp)
     register_stock_resources(mcp)
     register_prompts(mcp)
 

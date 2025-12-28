@@ -90,7 +90,7 @@ class TestServerResources:
         server = create_server(settings)
 
         tool_count = len(server._tool_manager._tools)
-        assert tool_count == 14
+        assert tool_count == 21
 
 
 class TestServerMain:
