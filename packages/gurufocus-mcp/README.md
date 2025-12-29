@@ -83,27 +83,105 @@ If using uv or a virtual environment:
 
 After adding the configuration, restart Claude Desktop. You should see the GuruFocus tools available in Claude's interface.
 
-## Implementation Status
+## Available Tools
 
-**Progress: 3 of 52 endpoints (6%)**
+### Stock Tools (21 tools)
 
-See [Implementation Tracker](../../docs/implementation_tracker.md) for full details.
+| Tool                          | Description                                                      |
+| ----------------------------- | ---------------------------------------------------------------- |
+| `get_stock_summary`           | Comprehensive overview: price, valuation, GF Score               |
+| `get_stock_financials`        | Financial statements (income, balance sheet, cash flow)          |
+| `get_stock_keyratios`         | Key financial ratios (profitability, liquidity, growth)          |
+| `get_stock_quote`             | Real-time stock quote with OHLCV data                            |
+| `get_stock_price_history`     | Historical price data                                            |
+| `get_stock_price_ohlc`        | Historical OHLC price bars for technical analysis                |
+| `get_stock_volume`            | Historical trading volume data                                   |
+| `get_stock_unadjusted_price`  | Historical unadjusted (pre-split) prices                         |
+| `get_stock_dividends`         | Dividend history                                                 |
+| `get_stock_current_dividend`  | Current dividend yield and payment info                          |
+| `get_stock_analyst_estimates` | Analyst earnings/revenue estimates                               |
+| `get_stock_insider_trades`    | Insider trading activity for a stock                             |
+| `get_stock_gurus`             | Guru holdings in a specific stock                                |
+| `get_stock_executives`        | Company executives and directors                                 |
+| `get_stock_trades_history`    | Guru trades history for a stock                                  |
+| `get_stock_operating_data`    | Operating metrics and KPIs                                       |
+| `get_stock_segments_data`     | Business and geographic segment breakdown                        |
+| `get_stock_ownership`         | Ownership breakdown (institutional, insider, float)              |
+| `get_stock_indicator_history` | Historical ownership indicators                                  |
+| `get_stock_indicators`        | List of 240+ available stock indicators                          |
+| `get_stock_indicator`         | Time series data for a specific indicator                        |
 
-### Implemented Tools
+### Insider Tools (7 tools)
 
-| Tool                   | Description                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------------- |
-| `get_stock_summary`    | Comprehensive overview: price, valuation, GF Score                                    |
-| `get_stock_financials` | Financial statements (income, balance sheet, cash flow) with annual/quarterly support |
-| `get_stock_keyratios`  | Key financial ratios (profitability, liquidity, solvency, growth, valuation)          |
+| Tool                      | Description                              |
+| ------------------------- | ---------------------------------------- |
+| `get_insider_updates`     | Recent insider transaction updates       |
+| `get_insider_ceo_buys`    | CEO buy transactions (bullish signal)    |
+| `get_insider_cfo_buys`    | CFO buy transactions                     |
+| `get_insider_cluster_buys`| Cluster buy signals (multiple insiders)  |
+| `get_insider_double_buys` | Double-down buy signals                  |
+| `get_insider_triple_buys` | Triple-down buy signals                  |
+| `get_insider_list`        | Browse known insiders                    |
 
-### Planned Tools
+### Guru Tools (4 tools)
 
-| Category               | Tools                                                                                                                 |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Stock Analysis         | `get_gf_score`, `get_valuations`, `get_dividends`, `get_insider_trades`, `get_analyst_estimates`, `get_price_history` |
-| Comparison & Screening | `compare_stocks`, `screen_stocks`, `find_undervalued`, `rank_stocks`                                                  |
-| Guru                   | `get_guru_holdings`, `get_guru_trades`, `get_stock_gurus`                                                             |
+| Tool                    | Description                               |
+| ----------------------- | ----------------------------------------- |
+| `get_gurulist`          | List all tracked super investors          |
+| `get_guru_picks`        | Guru's stock picks and trading activity   |
+| `get_guru_aggregated`   | Guru's complete portfolio with holdings   |
+| `get_guru_realtime_picks`| Recent trading activity across all gurus |
+
+### Politician Tools (2 tools)
+
+| Tool                         | Description                            |
+| ---------------------------- | -------------------------------------- |
+| `get_politicians`            | List tracked politicians               |
+| `get_politician_transactions`| Politician stock transactions          |
+
+### Reference Data Tools (6 tools)
+
+| Tool                  | Description                               |
+| --------------------- | ----------------------------------------- |
+| `get_exchange_list`   | List worldwide stock exchanges            |
+| `get_exchange_stocks` | Stocks listed on a specific exchange      |
+| `get_index_list`      | List worldwide market indexes             |
+| `get_index_stocks`    | Constituent stocks in a market index      |
+| `get_country_currency`| Country currency mapping                  |
+| `get_funda_updated`   | Recently updated fundamentals             |
+
+### Economic Data Tools (3 tools)
+
+| Tool                     | Description                            |
+| ------------------------ | -------------------------------------- |
+| `get_economic_indicators`| List available economic indicators     |
+| `get_economic_indicator` | Time series for economic indicator     |
+| `get_financial_calendar` | Financial calendar (earnings, IPOs)    |
+
+### Personal/Account Tools (6 tools)
+
+| Tool                   | Description                               |
+| ---------------------- | ----------------------------------------- |
+| `get_api_usage`        | API usage statistics                      |
+| `get_user_screeners`   | User's saved screeners                    |
+| `get_screener_results` | Run a saved screener                      |
+| `get_portfolios`       | User's portfolios                         |
+| `get_portfolio_detail` | Portfolio holdings and performance        |
+| `get_portfolio_changes`| Portfolio changes over time               |
+
+### ETF Tools (2 tools)
+
+| Tool                  | Description                               |
+| --------------------- | ----------------------------------------- |
+| `get_etf_list`        | List available ETFs                       |
+| `get_etf_sector_weighting` | ETF sector allocation               |
+
+### Analysis Tools (2 tools)
+
+| Tool                  | Description                               |
+| --------------------- | ----------------------------------------- |
+| `compare_stocks`      | Compare multiple stocks side-by-side      |
+| `get_stock_news`      | Recent news for a stock                   |
 
 ## Available Resources
 
@@ -130,28 +208,6 @@ gurufocus://guru/{guru_id}/picks        - Guru's portfolio
 gurufocus://guru/{guru_id}/trades       - Guru's recent trades
 gurufocus://stock/{symbol}/gurus        - Gurus holding a stock
 ```
-
-## Analysis Prompts
-
-Prompts provide structured frameworks for investment analysis:
-
-| Prompt              | Description                              | Implemented | Tested |
-| ------------------- | ---------------------------------------- | ----------- | ------ |
-| `investment_thesis` | Build a comprehensive investment thesis  | ❌           | ❌      |
-| `dcf_analysis`      | Discounted cash flow valuation guide     | ❌           | ❌      |
-| `moat_analysis`     | Economic moat evaluation framework       | ❌           | ❌      |
-| `risk_assessment`   | Comprehensive risk analysis              | ❌           | ❌      |
-| `guru_consensus`    | Analyze institutional investor sentiment | ❌           | ❌      |
-
-### Using Prompts
-
-In Claude Desktop, you can invoke prompts directly:
-
-```
-Use the investment_thesis prompt for AAPL
-```
-
-Claude will receive a structured framework and use the available tools to complete the analysis.
 
 ## Example Conversations
 
@@ -280,11 +336,17 @@ gurufocus_mcp/
 ├── __init__.py          # Package exports
 ├── config.py            # Configuration management
 ├── server.py            # MCP server setup
-├── tools.py             # Tool handlers (16 tools)
-├── resources.py         # Resource handlers (14 resources)
-├── prompts.py           # Analysis prompts (6 prompts)
-├── formatters.py        # Markdown formatters
-└── errors.py            # Error handling utilities
+├── formatting.py        # TOON/JSON formatters
+├── tools/               # Tool handlers (50+ tools)
+│   ├── stocks.py        # Stock data tools
+│   ├── insiders.py      # Insider activity tools
+│   ├── gurus.py         # Guru/institutional investor tools
+│   ├── politicians.py   # Politician trading tools
+│   ├── economic.py      # Economic data tools
+│   ├── reference.py     # Reference data tools
+│   ├── personal.py      # Account/portfolio tools
+│   └── etfs.py          # ETF tools
+└── resources/           # Resource handlers
 ```
 
 ## Related Packages
