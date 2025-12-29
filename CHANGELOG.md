@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+#### gurufocus-mcp
+- Removed `qgarp_scorecard` and `execution_risk_analysis` prompts from the MCP server to keep the server generic and allow users to apply their own investment methodologies
+
 ### Added
 
 #### gurufocus-api
