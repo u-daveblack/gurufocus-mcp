@@ -16,13 +16,21 @@ from gurufocus_api import (
     AnalystEstimates,
     CurrentDividend,
     DividendHistory,
+    EstimateHistoryResponse,
     ExecutiveList,
     GuruFocusClient,
     GuruTradesHistory,
+    IndicatorsList,
+    IndicatorTimeSeries,
     InsiderTrades,
+    NewsFeedResponse,
     OHLCHistory,
+    OperatingData,
+    OwnershipHistory,
     PriceHistory,
+    SegmentData,
     StockGurusResponse,
+    StockOwnership,
     StockQuote,
     UnadjustedPriceHistory,
     VolumeHistory,
@@ -51,6 +59,46 @@ SAMPLE_CURRENT_DIVIDEND_RESPONSE = load_fixture("current_dividend")
 SAMPLE_PRICE_OHLC_RESPONSE = load_fixture("price_ohlc")
 SAMPLE_VOLUME_RESPONSE = load_fixture("volume")
 SAMPLE_UNADJUSTED_PRICE_RESPONSE = load_fixture("unadjusted_price")
+SAMPLE_OPERATING_DATA_RESPONSE = load_fixture("operating_data")
+SAMPLE_SEGMENTS_DATA_RESPONSE = load_fixture("segments_data")
+SAMPLE_OWNERSHIP_RESPONSE = load_fixture("ownership")
+SAMPLE_INDICATOR_HISTORY_RESPONSE = load_fixture("indicator_history")
+
+
+def load_indicators_list() -> list:
+    """Load indicators list fixture."""
+    path = FIXTURES_DIR / "indicators" / "list.json"
+    with open(path) as f:
+        return json.load(f)
+
+
+def load_indicator_fixture(symbol: str, indicator: str) -> list:
+    """Load indicator fixture."""
+    path = FIXTURES_DIR / "indicator" / f"{symbol}_{indicator}.json"
+    with open(path) as f:
+        return json.load(f)
+
+
+SAMPLE_INDICATORS_LIST_RESPONSE = load_indicators_list()
+SAMPLE_INDICATOR_NET_INCOME_RESPONSE = load_indicator_fixture("FAKE1", "net_income")
+
+
+def load_news_feed_fixture() -> list:
+    """Load news feed fixture."""
+    path = FIXTURES_DIR / "news_feed" / "latest.json"
+    with open(path) as f:
+        return json.load(f)
+
+
+def load_estimate_history_fixture(symbol: str) -> dict:
+    """Load estimate history fixture."""
+    path = FIXTURES_DIR / "estimate_history" / f"{symbol}.json"
+    with open(path) as f:
+        return json.load(f)
+
+
+SAMPLE_NEWS_FEED_RESPONSE = load_news_feed_fixture()
+SAMPLE_ESTIMATE_HISTORY_RESPONSE = load_estimate_history_fixture("AAPL")
 
 
 class TestQuoteEndpoint:
@@ -1206,3 +1254,826 @@ class TestOHLCModelsEdgeCases:
         prices = UnadjustedPriceHistory.from_api_response([], "TEST")
         assert prices.symbol == "TEST"
         assert len(prices.prices) == 0
+
+
+class TestOperatingDataEndpoint:
+    """Tests for operating data endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_operating_data(self, cache_dir: Path) -> None:
+        """Test fetching operating data returns typed model."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/operating_data"
+        ).mock(return_value=Response(200, json=SAMPLE_OPERATING_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            ops = await client.stocks.get_operating_data("FAKE1")
+
+            assert isinstance(ops, OperatingData)
+            assert ops.symbol == "FAKE1"
+            assert len(ops.metrics) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_operating_data_cached(self, cache_dir: Path) -> None:
+        """Test that operating data is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/operating_data"
+        ).mock(return_value=Response(200, json=SAMPLE_OPERATING_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_operating_data("FAKE1")
+            await client.stocks.get_operating_data("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_operating_data_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw operating data."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/operating_data"
+        ).mock(return_value=Response(200, json=SAMPLE_OPERATING_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_operating_data_raw("FAKE1")
+            assert isinstance(raw, dict)
+            assert "FAKE1" in raw
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_operating_data_metric_details(self, cache_dir: Path) -> None:
+        """Test that operating data metrics contain expected details."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/operating_data"
+        ).mock(return_value=Response(200, json=SAMPLE_OPERATING_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            ops = await client.stocks.get_operating_data("FAKE1")
+
+            # Check first metric has expected structure
+            first_key = next(iter(ops.metrics.keys()))
+            metric = ops.metrics[first_key]
+            assert metric.name is not None
+            assert metric.key is not None
+            assert len(metric.data.annual) > 0
+
+
+class TestSegmentsDataEndpoint:
+    """Tests for segments data endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_segments_data(self, cache_dir: Path) -> None:
+        """Test fetching segments data returns typed model."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/segments_data"
+        ).mock(return_value=Response(200, json=SAMPLE_SEGMENTS_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            segments = await client.stocks.get_segments_data("FAKE1")
+
+            assert isinstance(segments, SegmentData)
+            assert segments.symbol == "FAKE1"
+            assert len(segments.business.keys) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_segments_data_cached(self, cache_dir: Path) -> None:
+        """Test that segments data is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/segments_data"
+        ).mock(return_value=Response(200, json=SAMPLE_SEGMENTS_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_segments_data("FAKE1")
+            await client.stocks.get_segments_data("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_segments_data_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw segments data."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/segments_data"
+        ).mock(return_value=Response(200, json=SAMPLE_SEGMENTS_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_segments_data_raw("FAKE1")
+            assert isinstance(raw, dict)
+            assert "business" in raw
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_segments_data_business_details(self, cache_dir: Path) -> None:
+        """Test that segment data contains expected business details."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/segments_data"
+        ).mock(return_value=Response(200, json=SAMPLE_SEGMENTS_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            segments = await client.stocks.get_segments_data("FAKE1")
+
+            # Check business segments have expected structure
+            assert len(segments.business.annual) > 0
+            period = segments.business.annual[0]
+            assert period.date is not None
+            assert len(period.segments) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_segments_data_geographic_details(self, cache_dir: Path) -> None:
+        """Test that segment data contains expected geographic details."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/segments_data"
+        ).mock(return_value=Response(200, json=SAMPLE_SEGMENTS_DATA_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            segments = await client.stocks.get_segments_data("FAKE1")
+
+            # Check geographic segments have expected structure
+            assert len(segments.geographic.keys) > 0
+            assert len(segments.geographic.annual) > 0
+
+
+class TestOperatingModelsEdgeCases:
+    """Tests for edge cases in operating/segment model parsing."""
+
+    def test_operating_data_empty_response(self) -> None:
+        """Test parsing empty operating data response."""
+        ops = OperatingData.from_api_response({}, "TEST")
+        assert ops.symbol == "TEST"
+        assert len(ops.metrics) == 0
+
+    def test_operating_data_wrong_symbol(self) -> None:
+        """Test parsing operating data with different symbol key."""
+        ops = OperatingData.from_api_response({"OTHER": {}}, "TEST")
+        assert ops.symbol == "TEST"
+        assert len(ops.metrics) == 0
+
+    def test_segment_data_empty_response(self) -> None:
+        """Test parsing empty segment data response."""
+        segments = SegmentData.from_api_response({}, "TEST")
+        assert segments.symbol == "TEST"
+        assert len(segments.business.keys) == 0
+        assert len(segments.geographic.keys) == 0
+
+
+class TestOwnershipEndpoint:
+    """Tests for ownership endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_ownership(self, cache_dir: Path) -> None:
+        """Test fetching ownership returns typed model."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/ownership").mock(
+            return_value=Response(200, json=SAMPLE_OWNERSHIP_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            ownership = await client.stocks.get_ownership("FAKE1")
+
+            assert isinstance(ownership, StockOwnership)
+            assert ownership.symbol == "FAKE1"
+            assert ownership.institutional_ownership is not None
+            assert ownership.insider_ownership is not None
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_ownership_cached(self, cache_dir: Path) -> None:
+        """Test that ownership is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/ownership"
+        ).mock(return_value=Response(200, json=SAMPLE_OWNERSHIP_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_ownership("FAKE1")
+            await client.stocks.get_ownership("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_ownership_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw ownership data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/ownership").mock(
+            return_value=Response(200, json=SAMPLE_OWNERSHIP_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_ownership_raw("FAKE1")
+            assert isinstance(raw, dict)
+            assert "Institutional_Ownership" in raw
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_ownership_details(self, cache_dir: Path) -> None:
+        """Test that ownership contains expected details."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/ownership").mock(
+            return_value=Response(200, json=SAMPLE_OWNERSHIP_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            ownership = await client.stocks.get_ownership("FAKE1")
+
+            assert ownership.institutional_ownership.percentage is not None
+            assert ownership.institutional_ownership.value is not None
+            assert ownership.insider_ownership.percentage is not None
+            assert ownership.shares_outstanding is not None
+
+
+class TestIndicatorHistoryEndpoint:
+    """Tests for indicator history endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicator_history(self, cache_dir: Path) -> None:
+        """Test fetching indicator history returns typed model."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/indicator_history"
+        ).mock(return_value=Response(200, json=SAMPLE_INDICATOR_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            history = await client.stocks.get_indicator_history("FAKE1")
+
+            assert isinstance(history, OwnershipHistory)
+            assert history.symbol == "FAKE1"
+            assert len(history.institutional_ownership) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicator_history_cached(self, cache_dir: Path) -> None:
+        """Test that indicator history is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/indicator_history"
+        ).mock(return_value=Response(200, json=SAMPLE_INDICATOR_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_indicator_history("FAKE1")
+            await client.stocks.get_indicator_history("FAKE1")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicator_history_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw indicator history data."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/indicator_history"
+        ).mock(return_value=Response(200, json=SAMPLE_INDICATOR_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_indicator_history_raw("FAKE1")
+            assert isinstance(raw, dict)
+            assert "insti_owner" in raw
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_indicator_history_details(self, cache_dir: Path) -> None:
+        """Test that indicator history contains expected details."""
+        api_token = "test-token"
+        respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/indicator_history"
+        ).mock(return_value=Response(200, json=SAMPLE_INDICATOR_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            history = await client.stocks.get_indicator_history("FAKE1")
+
+            # Check institutional ownership has expected structure
+            point = history.institutional_ownership[0]
+            assert point.date is not None
+            assert point.percentage is not None
+            assert point.shares is not None
+
+            # Check shares outstanding series exists
+            assert len(history.shares_outstanding) > 0
+
+
+class TestIndicatorsListEndpoint:
+    """Tests for indicators list endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicators(self, cache_dir: Path) -> None:
+        """Test fetching indicators list returns typed model."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/indicators").mock(
+            return_value=Response(200, json=SAMPLE_INDICATORS_LIST_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            indicators = await client.stocks.get_indicators()
+
+            assert isinstance(indicators, IndicatorsList)
+            assert len(indicators.indicators) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicators_cached(self, cache_dir: Path) -> None:
+        """Test that indicators list is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/indicators"
+        ).mock(return_value=Response(200, json=SAMPLE_INDICATORS_LIST_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_indicators()
+            await client.stocks.get_indicators()
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicators_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw indicators list data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/indicators").mock(
+            return_value=Response(200, json=SAMPLE_INDICATORS_LIST_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_indicators_raw()
+            assert isinstance(raw, list)
+            assert len(raw) > 0
+            assert "key" in raw[0]
+            assert "name" in raw[0]
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_indicators_search(self, cache_dir: Path) -> None:
+        """Test searching indicators by name or key."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/indicators").mock(
+            return_value=Response(200, json=SAMPLE_INDICATORS_LIST_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            indicators = await client.stocks.get_indicators()
+
+            # Search for indicators containing "margin"
+            results = indicators.search("margin")
+            assert len(results) > 0
+            for ind in results:
+                assert "margin" in ind.key.lower() or "margin" in ind.name.lower()
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_indicators_get_by_key(self, cache_dir: Path) -> None:
+        """Test getting an indicator by key."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/indicators").mock(
+            return_value=Response(200, json=SAMPLE_INDICATORS_LIST_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            indicators = await client.stocks.get_indicators()
+
+            # Get specific indicator
+            ind = indicators.get_by_key("net_income")
+            assert ind is not None
+            assert ind.key == "net_income"
+            assert ind.name == "Net Income"
+
+
+class TestIndicatorEndpoint:
+    """Tests for single indicator endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicator(self, cache_dir: Path) -> None:
+        """Test fetching indicator returns typed model."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/net_income").mock(
+            return_value=Response(200, json=SAMPLE_INDICATOR_NET_INCOME_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            indicator = await client.stocks.get_indicator("FAKE1", "net_income")
+
+            assert isinstance(indicator, IndicatorTimeSeries)
+            assert indicator.symbol == "FAKE1"
+            assert indicator.indicator_key == "net_income"
+            assert len(indicator.data) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicator_cached(self, cache_dir: Path) -> None:
+        """Test that indicator is cached."""
+        api_token = "test-token"
+        route = respx.get(
+            f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/net_income"
+        ).mock(return_value=Response(200, json=SAMPLE_INDICATOR_NET_INCOME_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            await client.stocks.get_indicator("FAKE1", "net_income")
+            await client.stocks.get_indicator("FAKE1", "net_income")
+            assert route.call_count == 1
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_indicator_raw(self, cache_dir: Path) -> None:
+        """Test fetching raw indicator data."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/net_income").mock(
+            return_value=Response(200, json=SAMPLE_INDICATOR_NET_INCOME_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            raw = await client.stocks.get_indicator_raw("FAKE1", "net_income")
+            assert isinstance(raw, list)
+            assert len(raw) > 0
+            # Each item should be [date, value]
+            assert len(raw[0]) == 2
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_indicator_data_points(self, cache_dir: Path) -> None:
+        """Test that indicator data points contain expected details."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/net_income").mock(
+            return_value=Response(200, json=SAMPLE_INDICATOR_NET_INCOME_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            indicator = await client.stocks.get_indicator("FAKE1", "net_income")
+
+            point = indicator.data[0]
+            assert point.date is not None
+            assert point.value is not None
+            assert point.value > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_indicator_latest_earliest(self, cache_dir: Path) -> None:
+        """Test getting latest and earliest data points."""
+        api_token = "test-token"
+        respx.get(f"https://api.gurufocus.com/public/user/{api_token}/stock/FAKE1/net_income").mock(
+            return_value=Response(200, json=SAMPLE_INDICATOR_NET_INCOME_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token=api_token,
+            cache_dir=str(cache_dir),
+        ) as client:
+            indicator = await client.stocks.get_indicator("FAKE1", "net_income")
+
+            latest = indicator.latest
+            earliest = indicator.earliest
+            assert latest is not None
+            assert earliest is not None
+            assert latest.date >= earliest.date
+
+
+class TestOwnershipModelsEdgeCases:
+    """Tests for edge cases in ownership/indicator model parsing."""
+
+    def test_ownership_empty_response(self) -> None:
+        """Test parsing empty ownership response."""
+        ownership = StockOwnership.from_api_response({}, "TEST")
+        assert ownership.symbol == "TEST"
+        # Empty dicts still parse to OwnershipBreakdown but with None values
+        assert ownership.shares_outstanding is None
+        assert ownership.company is None
+
+    def test_ownership_history_empty_response(self) -> None:
+        """Test parsing empty ownership history response."""
+        history = OwnershipHistory.from_api_response({}, "TEST")
+        assert history.symbol == "TEST"
+        assert len(history.institutional_ownership) == 0
+        assert len(history.shares_outstanding) == 0
+
+    def test_indicators_list_empty_response(self) -> None:
+        """Test parsing empty indicators list response."""
+        indicators = IndicatorsList.from_api_response([])
+        assert len(indicators.indicators) == 0
+
+    def test_indicator_time_series_empty_response(self) -> None:
+        """Test parsing empty indicator time series response."""
+        indicator = IndicatorTimeSeries.from_api_response([], "TEST", "net_income")
+        assert indicator.symbol == "TEST"
+        assert indicator.indicator_key == "net_income"
+        assert len(indicator.data) == 0
+        assert indicator.latest is None
+        assert indicator.earliest is None
+
+
+class TestNewsFeedEndpoint:
+    """Tests for news feed endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_news_feed_returns_response(self, cache_dir: Path) -> None:
+        """Test that get_news_feed returns a NewsFeedResponse."""
+        respx.get("https://api.gurufocus.com/public/user/test-token/stock/news_feed").mock(
+            return_value=Response(200, json=SAMPLE_NEWS_FEED_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token="test-token",
+            cache_enabled=True,
+            cache_dir=cache_dir,
+        ) as client:
+            result = await client.stocks.get_news_feed()
+
+        assert isinstance(result, NewsFeedResponse)
+        assert result.count == 5
+        assert len(result.items) == 5
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_news_feed_parses_items(self, cache_dir: Path) -> None:
+        """Test that news items are parsed correctly."""
+        respx.get("https://api.gurufocus.com/public/user/test-token/stock/news_feed").mock(
+            return_value=Response(200, json=SAMPLE_NEWS_FEED_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token="test-token",
+            cache_enabled=True,
+            cache_dir=cache_dir,
+        ) as client:
+            result = await client.stocks.get_news_feed()
+
+        first = result.items[0]
+        assert first.date == "2025-01-10 11:44:57"
+        assert first.headline == "Fake Corp Announces Record Q4 Earnings"
+        assert "gurufocus.com" in first.url
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_news_feed_raw_returns_list(self, cache_dir: Path) -> None:
+        """Test that get_news_feed_raw returns raw list."""
+        respx.get("https://api.gurufocus.com/public/user/test-token/stock/news_feed").mock(
+            return_value=Response(200, json=SAMPLE_NEWS_FEED_RESPONSE)
+        )
+
+        async with GuruFocusClient(
+            api_token="test-token",
+            cache_enabled=True,
+            cache_dir=cache_dir,
+        ) as client:
+            result = await client.stocks.get_news_feed_raw()
+
+        assert isinstance(result, list)
+        assert len(result) == 5
+
+
+class TestEstimateHistoryEndpoint:
+    """Tests for estimate history endpoint."""
+
+    @pytest.fixture
+    def cache_dir(self) -> Path:
+        """Create a temporary cache directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield Path(tmpdir)
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_estimate_history_returns_response(self, cache_dir: Path) -> None:
+        """Test that get_estimate_history returns an EstimateHistoryResponse."""
+        respx.get(
+            "https://api.gurufocus.com/public/user/test-token/stock/AAPL/estimate_history"
+        ).mock(return_value=Response(200, json=SAMPLE_ESTIMATE_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token="test-token",
+            cache_enabled=True,
+            cache_dir=cache_dir,
+        ) as client:
+            result = await client.stocks.get_estimate_history("AAPL")
+
+        assert isinstance(result, EstimateHistoryResponse)
+        assert result.symbol == "AAPL"
+        assert len(result.annual) > 0
+        assert len(result.quarterly) > 0
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_estimate_history_parses_metrics(self, cache_dir: Path) -> None:
+        """Test that estimate metrics are parsed correctly."""
+        respx.get(
+            "https://api.gurufocus.com/public/user/test-token/stock/AAPL/estimate_history"
+        ).mock(return_value=Response(200, json=SAMPLE_ESTIMATE_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token="test-token",
+            cache_enabled=True,
+            cache_dir=cache_dir,
+        ) as client:
+            result = await client.stocks.get_estimate_history("AAPL")
+
+        # Find EPS estimate metric
+        eps_metric = next((m for m in result.annual if m.metric_name == "eps_estimate"), None)
+        assert eps_metric is not None
+        assert len(eps_metric.periods) > 0
+
+        # Check first period
+        first_period = eps_metric.periods[0]
+        assert first_period.period == "202509"
+        assert first_period.actual == 7.25
+        assert first_period.estimate_mean == 7.10
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_estimate_history_raw_returns_dict(self, cache_dir: Path) -> None:
+        """Test that get_estimate_history_raw returns raw dict."""
+        respx.get(
+            "https://api.gurufocus.com/public/user/test-token/stock/AAPL/estimate_history"
+        ).mock(return_value=Response(200, json=SAMPLE_ESTIMATE_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token="test-token",
+            cache_enabled=True,
+            cache_dir=cache_dir,
+        ) as client:
+            result = await client.stocks.get_estimate_history_raw("AAPL")
+
+        assert isinstance(result, dict)
+        assert "annual" in result
+        assert "quarterly" in result
+
+    @pytest.mark.asyncio
+    @respx.mock
+    async def test_get_estimate_history_normalizes_symbol(self, cache_dir: Path) -> None:
+        """Test that symbol is normalized to uppercase."""
+        respx.get(
+            "https://api.gurufocus.com/public/user/test-token/stock/AAPL/estimate_history"
+        ).mock(return_value=Response(200, json=SAMPLE_ESTIMATE_HISTORY_RESPONSE))
+
+        async with GuruFocusClient(
+            api_token="test-token",
+            cache_enabled=True,
+            cache_dir=cache_dir,
+        ) as client:
+            result = await client.stocks.get_estimate_history("aapl")
+
+        assert result.symbol == "AAPL"
+
+
+class TestNewsFeedModelsEdgeCases:
+    """Tests for edge cases in news feed model parsing."""
+
+    def test_news_feed_empty_response(self) -> None:
+        """Test parsing empty news feed response."""
+        news = NewsFeedResponse.from_api_response([])
+        assert news.count == 0
+        assert len(news.items) == 0
+
+    def test_news_feed_missing_fields(self) -> None:
+        """Test parsing news item with missing optional fields."""
+        news = NewsFeedResponse.from_api_response([{"date": "2025-01-01", "headline": "Test"}])
+        assert len(news.items) == 1
+        assert news.items[0].url == ""
+
+
+class TestEstimateHistoryModelsEdgeCases:
+    """Tests for edge cases in estimate history model parsing."""
+
+    def test_estimate_history_empty_response(self) -> None:
+        """Test parsing empty estimate history response."""
+        history = EstimateHistoryResponse.from_api_response({}, "TEST")
+        assert history.symbol == "TEST"
+        assert len(history.annual) == 0
+        assert len(history.quarterly) == 0
+
+    def test_estimate_history_partial_response(self) -> None:
+        """Test parsing estimate history with only annual data."""
+        history = EstimateHistoryResponse.from_api_response(
+            {"annual": {"eps_estimate": {"202509": {"actual": 5.0}}}}, "TEST"
+        )
+        assert history.symbol == "TEST"
+        assert len(history.annual) == 1
+        assert len(history.quarterly) == 0

@@ -62,12 +62,61 @@ class CacheCategory(Enum):
     INSIDER_TRIPLE = "insider_triple"
     INSIDER_LIST = "insider_list"
 
+    # Operating & segment data (earnings-dependent, refresh quarterly)
+    OPERATING_DATA = "operating_data"
+    SEGMENTS_DATA = "segments_data"
+
+    # Ownership & indicators
+    OWNERSHIP = "ownership"
+    INDICATOR_HISTORY = "indicator_history"
+    INDICATORS_LIST = "indicators_list"
+    INDICATOR_VALUE = "indicator_value"
+
     # Static (refresh monthly)
     PROFILE = "profile"
     GURUS = "gurus"
     GURU_LIST = "guru_list"
+    GURU_PICKS = "guru_picks"
+    GURU_AGGREGATED = "guru_aggregated"
+    GURU_REALTIME_PICKS = "guru_realtime_picks"
     EXECUTIVES = "executives"
     TRADES_HISTORY = "trades_history"
+
+    # Politician data
+    POLITICIANS_LIST = "politicians_list"
+    POLITICIAN_TRANSACTIONS = "politician_transactions"
+
+    # Reference data (exchanges and indexes)
+    EXCHANGE_LIST = "exchange_list"
+    EXCHANGE_STOCKS = "exchange_stocks"
+    INDEX_LIST = "index_list"
+    INDEX_STOCKS = "index_stocks"
+
+    # Economic data
+    ECONOMIC_INDICATORS_LIST = "economic_indicators_list"
+    ECONOMIC_INDICATOR_ITEM = "economic_indicator_item"
+    CALENDAR = "calendar"
+
+    # News feed
+    NEWS_FEED = "news_feed"
+
+    # Estimate history
+    ESTIMATE_HISTORY = "estimate_history"
+
+    # ETF data
+    ETF_LIST = "etf_list"
+    ETF_SECTOR_WEIGHTING = "etf_sector_weighting"
+
+    # User/Personal data
+    API_USAGE = "api_usage"
+    USER_SCREENERS = "user_screeners"
+    USER_SCREENER_RESULTS = "user_screener_results"
+    PORTFOLIOS = "portfolios"
+    PORTFOLIO_DETAIL = "portfolio_detail"
+
+    # Misc reference data
+    COUNTRY_CURRENCY = "country_currency"
+    FUNDA_UPDATED = "funda_updated"
 
 
 @dataclass(frozen=True)
@@ -199,7 +248,19 @@ _CACHE_CONFIGS: dict[CacheCategory, CacheConfig] = {
     ),
     CacheCategory.GURU_LIST: CacheConfig(
         tier=CacheTier.STATIC,
-        ttl=timedelta(days=7),
+        ttl=timedelta(days=7),  # Large dataset, cache longer
+    ),
+    CacheCategory.GURU_PICKS: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Guru picks update with SEC filings
+    ),
+    CacheCategory.GURU_AGGREGATED: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Aggregated portfolio updates with filings
+    ),
+    CacheCategory.GURU_REALTIME_PICKS: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(minutes=15),  # Real-time activity, short TTL
     ),
     CacheCategory.EXECUTIVES: CacheConfig(
         tier=CacheTier.STATIC,
@@ -208,6 +269,124 @@ _CACHE_CONFIGS: dict[CacheCategory, CacheConfig] = {
     CacheCategory.TRADES_HISTORY: CacheConfig(
         tier=CacheTier.STATIC,
         ttl=timedelta(days=7),  # Guru trades update with SEC filings
+    ),
+    # Operating & segment data (earnings-dependent)
+    CacheCategory.OPERATING_DATA: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Refresh daily for operational metrics
+        invalidate_on_earnings=True,
+    ),
+    CacheCategory.SEGMENTS_DATA: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Refresh daily for segment data
+        invalidate_on_earnings=True,
+    ),
+    # Ownership & indicators
+    CacheCategory.OWNERSHIP: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=7),  # Ownership updates with SEC filings
+    ),
+    CacheCategory.INDICATOR_HISTORY: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=7),  # Historical ownership updates with SEC filings
+    ),
+    CacheCategory.INDICATORS_LIST: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=30),  # List of indicators rarely changes
+    ),
+    CacheCategory.INDICATOR_VALUE: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Individual indicator values may change daily
+        invalidate_on_earnings=True,
+    ),
+    # Politician data
+    CacheCategory.POLITICIANS_LIST: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=7),  # Politicians list changes infrequently
+    ),
+    CacheCategory.POLITICIAN_TRANSACTIONS: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Transactions update with SEC filings
+    ),
+    # Reference data (exchanges and indexes)
+    CacheCategory.EXCHANGE_LIST: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=30),  # Exchange list rarely changes
+    ),
+    CacheCategory.EXCHANGE_STOCKS: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=7),  # Stock listings update occasionally
+    ),
+    CacheCategory.INDEX_LIST: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=30),  # Index list rarely changes
+    ),
+    CacheCategory.INDEX_STOCKS: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=7),  # Index constituents change occasionally
+    ),
+    # Economic data
+    CacheCategory.ECONOMIC_INDICATORS_LIST: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=30),  # List of indicators rarely changes
+    ),
+    CacheCategory.ECONOMIC_INDICATOR_ITEM: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # Economic data updates regularly
+    ),
+    CacheCategory.CALENDAR: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(hours=1),  # Calendar data changes frequently
+    ),
+    # News feed
+    CacheCategory.NEWS_FEED: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(minutes=15),  # News updates frequently
+    ),
+    # Estimate history
+    CacheCategory.ESTIMATE_HISTORY: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=7),  # Estimates update with earnings
+        invalidate_on_earnings=True,
+    ),
+    # ETF data
+    CacheCategory.ETF_LIST: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=7),  # ETF list changes infrequently
+    ),
+    CacheCategory.ETF_SECTOR_WEIGHTING: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=7),  # Sector allocations change infrequently
+    ),
+    # User/Personal data
+    CacheCategory.API_USAGE: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(minutes=5),  # Very short TTL for quota tracking
+    ),
+    CacheCategory.USER_SCREENERS: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(hours=1),  # Screeners update infrequently
+    ),
+    CacheCategory.USER_SCREENER_RESULTS: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(hours=1),  # Screener results change with market data
+    ),
+    CacheCategory.PORTFOLIOS: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(minutes=5),  # Portfolio values change with prices
+    ),
+    CacheCategory.PORTFOLIO_DETAIL: CacheConfig(
+        tier=CacheTier.PRICE_DEPENDENT,
+        ttl=timedelta(minutes=5),  # Portfolio holdings change with prices
+    ),
+    # Misc reference data
+    CacheCategory.COUNTRY_CURRENCY: CacheConfig(
+        tier=CacheTier.STATIC,
+        ttl=timedelta(days=30),  # Currency codes rarely change
+    ),
+    CacheCategory.FUNDA_UPDATED: CacheConfig(
+        tier=CacheTier.EARNINGS_DEPENDENT,
+        ttl=timedelta(days=1),  # List of updated fundamentals for date
     ),
 }
 

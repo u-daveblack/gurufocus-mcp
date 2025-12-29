@@ -14,7 +14,17 @@ from gurufocus_api.logging import configure_logging, get_logger
 
 from .config import MCPServerSettings, get_settings
 from .resources import register_stock_resources
-from .tools import register_analysis_tools, register_insider_tools, register_stock_tools
+from .tools import (
+    register_analysis_tools,
+    register_economic_tools,
+    register_etf_tools,
+    register_guru_tools,
+    register_insider_tools,
+    register_personal_tools,
+    register_politician_tools,
+    register_reference_tools,
+    register_stock_tools,
+)
 
 # Module-level state for the default server
 _default_settings: MCPServerSettings | None = None
@@ -86,6 +96,12 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
     register_stock_tools(mcp)
     register_analysis_tools(mcp)
     register_insider_tools(mcp)
+    register_guru_tools(mcp)
+    register_politician_tools(mcp)
+    register_reference_tools(mcp)
+    register_economic_tools(mcp)
+    register_etf_tools(mcp)
+    register_personal_tools(mcp)
     register_stock_resources(mcp)
 
     # Count registered resources and tools

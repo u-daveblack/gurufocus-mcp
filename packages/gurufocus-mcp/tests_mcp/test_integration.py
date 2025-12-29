@@ -39,12 +39,17 @@ class TestMCPProtocolCompliance:
 
     @pytest.mark.asyncio
     async def test_list_tools_returns_all_stock_tools(self, client: Client) -> None:
-        """Test that list_tools returns all stock tools."""
+        """Test that list_tools returns all stock tools (51 = 53 minus 2 disabled portfolio tools)."""
         tools = await client.list_tools()
 
-        assert len(tools) == 21
+        assert len(tools) == 51
         tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
+        assert "get_etf_list" in tool_names
+        assert "get_api_usage" in tool_names
+        assert "get_user_screeners" in tool_names
+        assert "get_country_currency" in tool_names
+        assert "get_funda_updated" in tool_names
         assert "get_stock_quote" in tool_names
         assert "get_stock_dividend" in tool_names
         assert "get_stock_current_dividend" in tool_names
@@ -52,11 +57,39 @@ class TestMCPProtocolCompliance:
         assert "get_stock_keyratios" in tool_names
         assert "get_qgarp_analysis" in tool_names
         assert "get_stock_gurus" in tool_names
+        # Economic tools
+        assert "get_economic_indicators" in tool_names
+        assert "get_economic_indicator" in tool_names
+        assert "get_financial_calendar" in tool_names
         assert "get_stock_executives" in tool_names
         assert "get_stock_trades_history" in tool_names
         assert "get_stock_price_ohlc" in tool_names
         assert "get_stock_volume" in tool_names
         assert "get_stock_unadjusted_price" in tool_names
+        assert "get_stock_operating_data" in tool_names
+        assert "get_exchange_list" in tool_names
+        assert "get_exchange_stocks" in tool_names
+        assert "get_index_list" in tool_names
+        assert "get_index_stocks" in tool_names
+        assert "get_stock_segments_data" in tool_names
+        # Batch 5: Ownership & Indicators
+        assert "get_stock_ownership" in tool_names
+        assert "get_stock_indicator_history" in tool_names
+        assert "get_stock_indicators" in tool_names
+        assert "get_stock_indicator" in tool_names
+        # Batch 6: Guru Data
+        assert "get_gurulist" in tool_names
+        assert "get_guru_picks" in tool_names
+        assert "get_guru_aggregated" in tool_names
+        assert "get_guru_realtime_picks" in tool_names
+        # Batch 7: Politician Data
+        assert "get_politicians" in tool_names
+        assert "get_politician_transactions" in tool_names
+        # Estimates
+        assert "get_stock_analyst_estimates" in tool_names
+        assert "get_stock_estimate_history" in tool_names
+        # Usage tracking
+        assert "get_usage_estimate" in tool_names
 
     @pytest.mark.asyncio
     async def test_no_resource_templates(self, client: Client) -> None:

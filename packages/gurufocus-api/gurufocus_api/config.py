@@ -99,3 +99,23 @@ class GuruFocusSettings(BaseSettings):
         default="console",
         description="Log output format: 'json' for production, 'console' for development",
     )
+
+    # API Usage Tracking
+    usage_tracking_enabled: bool = Field(
+        default=True,
+        description="Enable smart API usage tracking to monitor quota without extra API calls",
+    )
+
+    usage_tracking_sync_interval: int = Field(
+        default=300,
+        ge=60,
+        le=3600,
+        description="Seconds between API usage syncs (minimum 60, maximum 3600)",
+    )
+
+    usage_tracking_warn_threshold: float = Field(
+        default=10.0,
+        ge=0.0,
+        le=100.0,
+        description="Warn when remaining API quota is below this percentage",
+    )

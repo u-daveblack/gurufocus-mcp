@@ -277,7 +277,8 @@ class TestCachingIntegration:
 
             assert summary1.symbol == summary2.symbol
             assert client.cache.hits == 1
-            assert client.cache.misses == 1
+            # 2 misses: 1 for usage_tracker state, 1 for summary
+            assert client.cache.misses == 2
 
     @respx.mock
     async def test_bypass_cache_makes_api_call(self, cache_dir: Path) -> None:

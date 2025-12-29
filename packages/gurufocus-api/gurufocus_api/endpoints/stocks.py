@@ -4,13 +4,18 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 
 from ..cache.config import CacheCategory
 from ..models.dividends import CurrentDividend, DividendHistory
+from ..models.estimate_history import EstimateHistoryResponse
 from ..models.estimates import AnalystEstimates
 from ..models.executives import ExecutiveList
 from ..models.financials import FinancialStatements
 from ..models.gurus import StockGurusResponse
+from ..models.indicators import IndicatorsList, IndicatorTimeSeries
 from ..models.insiders import InsiderTrades
 from ..models.keyratios import KeyRatios
+from ..models.news import NewsFeedResponse
 from ..models.ohlc import OHLCHistory, UnadjustedPriceHistory, VolumeHistory
+from ..models.operating import OperatingData, SegmentData
+from ..models.ownership import OwnershipHistory, StockOwnership
 from ..models.price import PriceHistory
 from ..models.quote import StockQuote
 from ..models.summary import StockSummary
@@ -1105,3 +1110,536 @@ class StocksEndpoint:
         await cache.set(CacheCategory.UNADJUSTED_PRICE, cache_key, value=data)
 
         return cast(list[list[Any]], data)
+
+    async def get_operating_data(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> OperatingData:
+        """Get operating data for a stock.
+
+        Retrieves operational KPIs and metrics including unit sales,
+        capacity utilization, average selling prices, and other
+        industry-specific operational data.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            OperatingData with operational metrics and time series
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            ops = await client.stocks.get_operating_data("AAPL")
+            for key, metric in ops.metrics.items():
+                print(f"{metric.name}: {metric.data.annual}")
+        """
+        data = await self.get_operating_data_raw(symbol, bypass_cache=bypass_cache)
+        return OperatingData.from_api_response(data, symbol.upper().strip())
+
+    async def get_operating_data_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw operating data for a stock.
+
+        Same as get_operating_data() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.OPERATING_DATA, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/operating_data")
+
+        # Cache the response
+        await cache.set(CacheCategory.OPERATING_DATA, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_segments_data(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> SegmentData:
+        """Get business and geographic segment data for a stock.
+
+        Retrieves revenue breakdown by business segment (e.g., iPhone,
+        Services) and geographic region (e.g., Americas, Europe).
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            SegmentData with business and geographic segment breakdowns
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            segments = await client.stocks.get_segments_data("AAPL")
+            print(f"Business segments: {segments.business.keys}")
+            for period in segments.business.annual:
+                print(f"{period.date}: {period.segments}")
+        """
+        data = await self.get_segments_data_raw(symbol, bypass_cache=bypass_cache)
+        return SegmentData.from_api_response(data, symbol.upper().strip())
+
+    async def get_segments_data_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw segment data for a stock.
+
+        Same as get_segments_data() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.SEGMENTS_DATA, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/segments_data")
+
+        # Cache the response
+        await cache.set(CacheCategory.SEGMENTS_DATA, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_ownership(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> StockOwnership:
+        """Get ownership breakdown for a stock.
+
+        Retrieves current ownership structure including institutional
+        ownership, insider ownership, shares outstanding, and float percentage.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            StockOwnership with ownership breakdown
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            ownership = await client.stocks.get_ownership("AAPL")
+            print(f"Institutional: {ownership.institutional_ownership.percentage}%")
+            print(f"Insider: {ownership.insider_ownership.percentage}%")
+        """
+        data = await self.get_ownership_raw(symbol, bypass_cache=bypass_cache)
+        return StockOwnership.from_api_response(data, symbol.upper().strip())
+
+    async def get_ownership_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw ownership data for a stock.
+
+        Same as get_ownership() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.OWNERSHIP, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/ownership")
+
+        # Cache the response
+        await cache.set(CacheCategory.OWNERSHIP, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_indicator_history(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> OwnershipHistory:
+        """Get historical ownership indicator data for a stock.
+
+        Retrieves time series data for institutional ownership,
+        shares outstanding, and institution shares held over time.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            OwnershipHistory with time series ownership data
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            history = await client.stocks.get_indicator_history("AAPL")
+            for point in history.institutional_ownership[-5:]:
+                print(f"{point.date}: {point.percentage}%")
+        """
+        data = await self.get_indicator_history_raw(symbol, bypass_cache=bypass_cache)
+        return OwnershipHistory.from_api_response(data, symbol.upper().strip())
+
+    async def get_indicator_history_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw indicator history data for a stock.
+
+        Same as get_indicator_history() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.INDICATOR_HISTORY, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/indicator_history")
+
+        # Cache the response
+        await cache.set(CacheCategory.INDICATOR_HISTORY, symbol, value=data)
+
+        return cast(dict[str, Any], data)
+
+    async def get_indicators(
+        self,
+        bypass_cache: bool = False,
+    ) -> IndicatorsList:
+        """Get list of available stock indicators.
+
+        Retrieves all available indicators that can be queried
+        for individual stocks. Each indicator has a key (for API calls)
+        and a human-readable name.
+
+        Args:
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            IndicatorsList with all available indicators
+
+        Raises:
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            indicators = await client.stocks.get_indicators()
+            print(f"Available indicators: {len(indicators.indicators)}")
+            for ind in indicators.search("margin"):
+                print(f"{ind.key}: {ind.name}")
+        """
+        data = await self.get_indicators_raw(bypass_cache=bypass_cache)
+        return IndicatorsList.from_api_response(data)
+
+    async def get_indicators_raw(
+        self,
+        bypass_cache: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Get raw indicators list.
+
+        Same as get_indicators() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a list of indicator definitions
+        """
+        cache = self._client.cache
+        cache_key = "all"
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.INDICATORS_LIST, cache_key)
+            if cached_data is not None:
+                return cast(list[dict[str, Any]], cached_data)
+
+        # Fetch from API
+        data = await self._client.get("stock/indicators")
+
+        # Cache the response
+        await cache.set(CacheCategory.INDICATORS_LIST, cache_key, value=data)
+
+        return cast(list[dict[str, Any]], data)
+
+    async def get_indicator(
+        self,
+        symbol: str,
+        indicator_key: str,
+        bypass_cache: bool = False,
+    ) -> IndicatorTimeSeries:
+        """Get time series data for a specific indicator.
+
+        Retrieves historical values for a specific indicator key
+        for the given stock symbol.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            indicator_key: Indicator key (e.g., "net_income", "roe", "gross_margin")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            IndicatorTimeSeries with historical values
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            data = await client.stocks.get_indicator("AAPL", "net_income")
+            print(f"Net income history for {data.symbol}:")
+            for point in data.data[-5:]:
+                print(f"{point.date}: ${point.value:,.0f}")
+        """
+        data = await self.get_indicator_raw(symbol, indicator_key, bypass_cache=bypass_cache)
+        return IndicatorTimeSeries.from_api_response(data, symbol.upper().strip(), indicator_key)
+
+    async def get_indicator_raw(
+        self,
+        symbol: str,
+        indicator_key: str,
+        bypass_cache: bool = False,
+    ) -> list[list[Any]]:
+        """Get raw indicator time series data.
+
+        Same as get_indicator() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            indicator_key: Indicator key
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a list of [date, value] arrays
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+        cache_key = f"{symbol}:{indicator_key}"
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.INDICATOR_VALUE, cache_key)
+            if cached_data is not None:
+                return cast(list[list[Any]], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/{indicator_key}")
+
+        # Cache the response
+        await cache.set(CacheCategory.INDICATOR_VALUE, cache_key, value=data)
+
+        return cast(list[list[Any]], data)
+
+    # --- News Feed ---
+
+    async def get_news_feed(
+        self,
+        symbol: str | None = None,
+        bypass_cache: bool = False,
+    ) -> NewsFeedResponse:
+        """Get latest stock market news feed.
+
+        Retrieves recent news headlines from GuruFocus covering market
+        events, company announcements, and financial analysis.
+
+        Args:
+            symbol: Optional stock ticker to filter news (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            NewsFeedResponse with list of news items
+
+        Raises:
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            # Get all news
+            news = await client.stocks.get_news_feed()
+            print(f"Latest {news.count} headlines:")
+            for item in news.items[:5]:
+                print(f"  - {item.headline}")
+
+            # Get news for specific stock
+            msft_news = await client.stocks.get_news_feed(symbol="MSFT")
+        """
+        data = await self.get_news_feed_raw(symbol=symbol, bypass_cache=bypass_cache)
+        return NewsFeedResponse.from_api_response(data)
+
+    async def get_news_feed_raw(
+        self,
+        symbol: str | None = None,
+        bypass_cache: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Get raw news feed data.
+
+        Same as get_news_feed() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Optional stock ticker to filter news (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a list of dictionaries
+        """
+        cache = self._client.cache
+        cache_key = f"symbol:{symbol}" if symbol else "latest"
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.NEWS_FEED, cache_key)
+            if cached_data is not None:
+                return cast(list[dict[str, Any]], cached_data)
+
+        # Build query params
+        params: dict[str, str] = {}
+        if symbol:
+            params["symbol"] = symbol
+
+        # Fetch from API
+        data = await self._client.get("stock/news_feed", params=params)
+
+        # Cache the response
+        await cache.set(CacheCategory.NEWS_FEED, cache_key, value=data)
+
+        return cast(list[dict[str, Any]], data)
+
+    # --- Estimate History ---
+
+    async def get_estimate_history(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> EstimateHistoryResponse:
+        """Get analyst estimate history for a stock.
+
+        Retrieves historical analyst estimates for EPS, revenue, and other
+        metrics, showing how estimates compared to actual results.
+
+        Args:
+            symbol: Stock ticker symbol (e.g., "AAPL", "MSFT")
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            EstimateHistoryResponse with annual and quarterly estimate history
+
+        Raises:
+            InvalidSymbolError: If the symbol is not found
+            AuthenticationError: If the API token is invalid
+            APIError: For other API errors
+
+        Example:
+            history = await client.stocks.get_estimate_history("AAPL")
+            for metric in history.annual:
+                print(f"{metric.metric_name}:")
+                for period in metric.periods[:3]:
+                    if period.actual is not None:
+                        print(f"  {period.period}: actual={period.actual}, est={period.estimate_mean}")
+        """
+        data = await self.get_estimate_history_raw(symbol, bypass_cache=bypass_cache)
+        return EstimateHistoryResponse.from_api_response(data, symbol.upper().strip())
+
+    async def get_estimate_history_raw(
+        self,
+        symbol: str,
+        bypass_cache: bool = False,
+    ) -> dict[str, Any]:
+        """Get raw estimate history data.
+
+        Same as get_estimate_history() but returns the raw API response
+        without parsing into a Pydantic model.
+
+        Args:
+            symbol: Stock ticker symbol
+            bypass_cache: If True, skip cache and fetch fresh data
+
+        Returns:
+            Raw JSON response as a dictionary
+        """
+        symbol = symbol.upper().strip()
+        cache = self._client.cache
+
+        # Try to get from cache first
+        if not bypass_cache:
+            cached_data = await cache.get(CacheCategory.ESTIMATE_HISTORY, symbol)
+            if cached_data is not None:
+                return cast(dict[str, Any], cached_data)
+
+        # Fetch from API
+        data = await self._client.get(f"stock/{symbol}/estimate_history")
+
+        # Cache the response
+        await cache.set(CacheCategory.ESTIMATE_HISTORY, symbol, value=data)
+
+        return cast(dict[str, Any], data)
