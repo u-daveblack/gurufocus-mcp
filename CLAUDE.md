@@ -75,3 +75,7 @@ Tests use `pytest-asyncio` with `asyncio_mode = "auto"`. API tests use `respx` t
 ## Changelog
 
 When making changes, update `CHANGELOG.md` under the `[Unreleased]` section. Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format with categories: Added, Changed, Deprecated, Removed, Fixed, Security.
+
+## Readme
+
+When adding or removing a feature always review the `README.md` in the root directory and the `README.md` in the `packages/gurufocus-api` and `packages/gurufocus-mcp` directories and update it if necessary.
