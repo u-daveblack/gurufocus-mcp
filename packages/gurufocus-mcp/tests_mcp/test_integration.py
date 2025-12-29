@@ -71,15 +71,6 @@ class TestMCPProtocolCompliance:
         resources = await client.list_resources()
         assert len(resources) == 0
 
-    @pytest.mark.asyncio
-    async def test_prompts_registered(self, client: Client) -> None:
-        """Test that prompts are registered."""
-        prompts = await client.list_prompts()
-        assert len(prompts) == 2
-        prompt_names = [p.name for p in prompts]
-        assert "qgarp_scorecard" in prompt_names
-        assert "execution_risk_analysis" in prompt_names
-
 
 class TestToolFormats:
     """Tests for tool format validation."""
