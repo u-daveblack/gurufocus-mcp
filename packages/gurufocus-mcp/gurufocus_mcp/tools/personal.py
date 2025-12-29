@@ -182,111 +182,115 @@ def register_personal_tools(mcp: FastMCP) -> None:
             )
             raise_api_error(e)
 
-    @mcp.tool
-    async def get_portfolios(
-        format: Annotated[
-            OutputFormat,
-            Field(
-                default="toon",
-                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
-            ),
-        ] = "toon",
-        ctx: Context = None,  # type: ignore[assignment]
-    ) -> str | dict[str, Any]:
-        """Get the current user's portfolios.
-
-        Returns a list of user portfolios:
-        - portfolios: List of portfolio objects
-        - count: Total number of portfolios
-
-        Each portfolio includes:
-        - id: Portfolio ID (use with get_portfolio_detail)
-        - name: Portfolio name
-        - currency: Portfolio currency (USD, EUR, etc.)
-        - note: User notes
-
-        The 'format' parameter controls output encoding:
-        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
-        - 'json': Standard JSON format for debugging or compatibility
-        """
-        logger.debug("get_portfolios_called", format=format)
-
-        try:
-            client = get_client(ctx)
-
-            result = await client.personal.get_portfolios()
-            data = result.model_dump(mode="json", exclude_none=True)
-            logger.debug("get_portfolios_success", count=result.count)
-            return format_output(data, format)
-
-        except ToolError:
-            raise
-        except Exception as e:
-            logger.error("get_portfolios_error", error=str(e))
-            raise_api_error(e)
-
-    @mcp.tool
-    async def get_portfolio_detail(
-        portfolio_id: Annotated[
-            int,
-            Field(description="The portfolio ID to get details for"),
-        ],
-        format: Annotated[
-            OutputFormat,
-            Field(
-                default="toon",
-                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
-            ),
-        ] = "toon",
-        ctx: Context = None,  # type: ignore[assignment]
-    ) -> str | dict[str, Any]:
-        """Get detailed portfolio information including all holdings.
-
-        Returns portfolio detail:
-        - portfolio_id: Portfolio ID
-        - name: Portfolio name
-        - currency: Portfolio currency
-        - total_value: Total current market value
-        - total_cost: Total cost basis
-        - total_gain_loss: Total gain/loss
-        - holdings: List of holdings
-        - holdings_count: Number of holdings
-
-        Each holding includes:
-        - symbol: Stock ticker
-        - exchange: Exchange code
-        - company: Company name
-        - shares: Number of shares
-        - cost_basis: Cost basis per share
-        - current_price: Current price
-        - market_value: Current market value
-        - gain_loss: Gain/loss amount
-        - gain_loss_percent: Gain/loss percentage
-        - weight: Weight in portfolio (%)
-
-        The 'format' parameter controls output encoding:
-        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
-        - 'json': Standard JSON format for debugging or compatibility
-        """
-        logger.debug("get_portfolio_detail_called", portfolio_id=portfolio_id, format=format)
-
-        try:
-            client = get_client(ctx)
-
-            result = await client.personal.get_portfolio_detail(portfolio_id)
-            data = result.model_dump(mode="json", exclude_none=True)
-            logger.debug(
-                "get_portfolio_detail_success",
-                portfolio_id=portfolio_id,
-                holdings_count=result.holdings_count,
-            )
-            return format_output(data, format)
-
-        except ToolError:
-            raise
-        except Exception as e:
-            logger.error("get_portfolio_detail_error", portfolio_id=portfolio_id, error=str(e))
-            raise_api_error(e)
+    # NOTE: Portfolio endpoints commented out as of 2025-12-29.
+    # The V2 API endpoint (https://api.gurufocus.com/v2/{token}/portfolios) is not
+    # returning a valid response. Re-enable when the API is fixed.
+    #
+    # @mcp.tool
+    # async def get_portfolios(
+    #     format: Annotated[
+    #         OutputFormat,
+    #         Field(
+    #             default="toon",
+    #             description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+    #         ),
+    #     ] = "toon",
+    #     ctx: Context = None,  # type: ignore[assignment]
+    # ) -> str | dict[str, Any]:
+    #     """Get the current user's portfolios.
+    #
+    #     Returns a list of user portfolios:
+    #     - portfolios: List of portfolio objects
+    #     - count: Total number of portfolios
+    #
+    #     Each portfolio includes:
+    #     - id: Portfolio ID (use with get_portfolio_detail)
+    #     - name: Portfolio name
+    #     - currency: Portfolio currency (USD, EUR, etc.)
+    #     - note: User notes
+    #
+    #     The 'format' parameter controls output encoding:
+    #     - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+    #     - 'json': Standard JSON format for debugging or compatibility
+    #     """
+    #     logger.debug("get_portfolios_called", format=format)
+    #
+    #     try:
+    #         client = get_client(ctx)
+    #
+    #         result = await client.personal.get_portfolios()
+    #         data = result.model_dump(mode="json", exclude_none=True)
+    #         logger.debug("get_portfolios_success", count=result.count)
+    #         return format_output(data, format)
+    #
+    #     except ToolError:
+    #         raise
+    #     except Exception as e:
+    #         logger.error("get_portfolios_error", error=str(e))
+    #         raise_api_error(e)
+    #
+    # @mcp.tool
+    # async def get_portfolio_detail(
+    #     portfolio_id: Annotated[
+    #         int,
+    #         Field(description="The portfolio ID to get details for"),
+    #     ],
+    #     format: Annotated[
+    #         OutputFormat,
+    #         Field(
+    #             default="toon",
+    #             description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+    #         ),
+    #     ] = "toon",
+    #     ctx: Context = None,  # type: ignore[assignment]
+    # ) -> str | dict[str, Any]:
+    #     """Get detailed portfolio information including all holdings.
+    #
+    #     Returns portfolio detail:
+    #     - portfolio_id: Portfolio ID
+    #     - name: Portfolio name
+    #     - currency: Portfolio currency
+    #     - total_value: Total current market value
+    #     - total_cost: Total cost basis
+    #     - total_gain_loss: Total gain/loss
+    #     - holdings: List of holdings
+    #     - holdings_count: Number of holdings
+    #
+    #     Each holding includes:
+    #     - symbol: Stock ticker
+    #     - exchange: Exchange code
+    #     - company: Company name
+    #     - shares: Number of shares
+    #     - cost_basis: Cost basis per share
+    #     - current_price: Current price
+    #     - market_value: Current market value
+    #     - gain_loss: Gain/loss amount
+    #     - gain_loss_percent: Gain/loss percentage
+    #     - weight: Weight in portfolio (%)
+    #
+    #     The 'format' parameter controls output encoding:
+    #     - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+    #     - 'json': Standard JSON format for debugging or compatibility
+    #     """
+    #     logger.debug("get_portfolio_detail_called", portfolio_id=portfolio_id, format=format)
+    #
+    #     try:
+    #         client = get_client(ctx)
+    #
+    #         result = await client.personal.get_portfolio_detail(portfolio_id)
+    #         data = result.model_dump(mode="json", exclude_none=True)
+    #         logger.debug(
+    #             "get_portfolio_detail_success",
+    #             portfolio_id=portfolio_id,
+    #             holdings_count=result.holdings_count,
+    #         )
+    #         return format_output(data, format)
+    #
+    #     except ToolError:
+    #         raise
+    #     except Exception as e:
+    #         logger.error("get_portfolio_detail_error", portfolio_id=portfolio_id, error=str(e))
+    #         raise_api_error(e)
 
     @mcp.tool
     async def get_usage_estimate(

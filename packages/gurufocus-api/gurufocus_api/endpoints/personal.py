@@ -15,8 +15,9 @@ from typing import TYPE_CHECKING, Any, cast
 from gurufocus_api.cache.config import CacheCategory
 from gurufocus_api.models.personal import (
     APIUsageResponse,
-    PortfolioDetailResponse,
-    PortfoliosResponse,
+    # NOTE: Portfolio imports commented out as of 2025-12-29 (API not returning valid response)
+    # PortfolioDetailResponse,
+    # PortfoliosResponse,
     UserScreenerResultsResponse,
     UserScreenersResponse,
 )
@@ -183,100 +184,104 @@ class PersonalEndpoint:
         await cache.set(CacheCategory.USER_SCREENER_RESULTS, cache_key, value=data)
         return cast(list[dict[str, Any]], data)
 
-    # --- GET /v2/{token}/portfolios (V2 API) ---
-
-    async def get_portfolios(
-        self,
-        *,
-        bypass_cache: bool = False,
-    ) -> PortfoliosResponse:
-        """Get user's portfolios.
-
-        This uses the V2 API endpoint.
-
-        Args:
-            bypass_cache: If True, skip cache lookup
-
-        Returns:
-            PortfoliosResponse with list of portfolios
-        """
-        data = await self.get_portfolios_raw(bypass_cache=bypass_cache)
-        return PortfoliosResponse.from_api_response(data)
-
-    async def get_portfolios_raw(
-        self,
-        *,
-        bypass_cache: bool = False,
-    ) -> list[dict[str, Any]]:
-        """Get raw user portfolios list.
-
-        This uses the V2 API endpoint.
-
-        Args:
-            bypass_cache: If True, skip cache lookup
-
-        Returns:
-            Raw API response list
-        """
-        cache = self._client.cache
-        cache_key = "portfolios"
-
-        if not bypass_cache:
-            cached_data = await cache.get(CacheCategory.PORTFOLIOS, cache_key)
-            if cached_data is not None:
-                return cast(list[dict[str, Any]], cached_data)
-
-        data = await self._client.get_v2("portfolios")
-        await cache.set(CacheCategory.PORTFOLIOS, cache_key, value=data)
-        return cast(list[dict[str, Any]], data)
-
-    # --- POST /v2/{token}/portfolios/{id} (V2 API) ---
-
-    async def get_portfolio_detail(
-        self,
-        portfolio_id: int,
-        *,
-        bypass_cache: bool = False,
-    ) -> PortfolioDetailResponse:
-        """Get portfolio detail with holdings.
-
-        This uses the V2 API endpoint with POST method.
-
-        Args:
-            portfolio_id: The portfolio ID
-            bypass_cache: If True, skip cache lookup
-
-        Returns:
-            PortfolioDetailResponse with holdings
-        """
-        data = await self.get_portfolio_detail_raw(portfolio_id, bypass_cache=bypass_cache)
-        return PortfolioDetailResponse.from_api_response(data, portfolio_id)
-
-    async def get_portfolio_detail_raw(
-        self,
-        portfolio_id: int,
-        *,
-        bypass_cache: bool = False,
-    ) -> dict[str, Any]:
-        """Get raw portfolio detail.
-
-        This uses the V2 API endpoint with POST method.
-
-        Args:
-            portfolio_id: The portfolio ID
-            bypass_cache: If True, skip cache lookup
-
-        Returns:
-            Raw API response dict
-        """
-        cache = self._client.cache
-        cache_key = f"portfolio:{portfolio_id}"
-
-        if not bypass_cache:
-            cached_data = await cache.get(CacheCategory.PORTFOLIO_DETAIL, cache_key)
-            if cached_data is not None:
-                return cast(dict[str, Any], cached_data)
-
-        data = await self._client.post_v2(f"portfolios/{portfolio_id}")
-        await cache.set(CacheCategory.PORTFOLIO_DETAIL, cache_key, value=data)
-        return cast(dict[str, Any], data)
+    # NOTE: Portfolio endpoints commented out as of 2025-12-29.
+    # The V2 API endpoint (https://api.gurufocus.com/v2/{token}/portfolios) is not
+    # returning a valid response. Re-enable when the API is fixed.
+    #
+    # # --- GET /v2/{token}/portfolios (V2 API) ---
+    #
+    # async def get_portfolios(
+    #     self,
+    #     *,
+    #     bypass_cache: bool = False,
+    # ) -> PortfoliosResponse:
+    #     """Get user's portfolios.
+    #
+    #     This uses the V2 API endpoint.
+    #
+    #     Args:
+    #         bypass_cache: If True, skip cache lookup
+    #
+    #     Returns:
+    #         PortfoliosResponse with list of portfolios
+    #     """
+    #     data = await self.get_portfolios_raw(bypass_cache=bypass_cache)
+    #     return PortfoliosResponse.from_api_response(data)
+    #
+    # async def get_portfolios_raw(
+    #     self,
+    #     *,
+    #     bypass_cache: bool = False,
+    # ) -> list[dict[str, Any]]:
+    #     """Get raw user portfolios list.
+    #
+    #     This uses the V2 API endpoint.
+    #
+    #     Args:
+    #         bypass_cache: If True, skip cache lookup
+    #
+    #     Returns:
+    #         Raw API response list
+    #     """
+    #     cache = self._client.cache
+    #     cache_key = "portfolios"
+    #
+    #     if not bypass_cache:
+    #         cached_data = await cache.get(CacheCategory.PORTFOLIOS, cache_key)
+    #         if cached_data is not None:
+    #             return cast(list[dict[str, Any]], cached_data)
+    #
+    #     data = await self._client.get_v2("portfolios")
+    #     await cache.set(CacheCategory.PORTFOLIOS, cache_key, value=data)
+    #     return cast(list[dict[str, Any]], data)
+    #
+    # # --- POST /v2/{token}/portfolios/{id} (V2 API) ---
+    #
+    # async def get_portfolio_detail(
+    #     self,
+    #     portfolio_id: int,
+    #     *,
+    #     bypass_cache: bool = False,
+    # ) -> PortfolioDetailResponse:
+    #     """Get portfolio detail with holdings.
+    #
+    #     This uses the V2 API endpoint with POST method.
+    #
+    #     Args:
+    #         portfolio_id: The portfolio ID
+    #         bypass_cache: If True, skip cache lookup
+    #
+    #     Returns:
+    #         PortfolioDetailResponse with holdings
+    #     """
+    #     data = await self.get_portfolio_detail_raw(portfolio_id, bypass_cache=bypass_cache)
+    #     return PortfolioDetailResponse.from_api_response(data, portfolio_id)
+    #
+    # async def get_portfolio_detail_raw(
+    #     self,
+    #     portfolio_id: int,
+    #     *,
+    #     bypass_cache: bool = False,
+    # ) -> dict[str, Any]:
+    #     """Get raw portfolio detail.
+    #
+    #     This uses the V2 API endpoint with POST method.
+    #
+    #     Args:
+    #         portfolio_id: The portfolio ID
+    #         bypass_cache: If True, skip cache lookup
+    #
+    #     Returns:
+    #         Raw API response dict
+    #     """
+    #     cache = self._client.cache
+    #     cache_key = f"portfolio:{portfolio_id}"
+    #
+    #     if not bypass_cache:
+    #         cached_data = await cache.get(CacheCategory.PORTFOLIO_DETAIL, cache_key)
+    #         if cached_data is not None:
+    #             return cast(dict[str, Any], cached_data)
+    #
+    #     data = await self._client.post_v2(f"portfolios/{portfolio_id}")
+    #     await cache.set(CacheCategory.PORTFOLIO_DETAIL, cache_key, value=data)
+    #     return cast(dict[str, Any], data)

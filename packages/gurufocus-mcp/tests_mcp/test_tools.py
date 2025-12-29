@@ -32,9 +32,9 @@ class TestToolRegistration:
         assert "get_stock_summary" in tools
 
     def test_tool_count(self, server) -> None:
-        """Test that 53 tools are registered."""
+        """Test that 51 tools are registered (53 minus 2 disabled portfolio tools)."""
         tool_count = len(server._tool_manager._tools)
-        assert tool_count == 53
+        assert tool_count == 51
 
     def test_get_stock_financials_tool_registered(self, server) -> None:
         """Test that get_stock_financials tool is registered."""
@@ -69,10 +69,10 @@ class TestToolDiscovery:
 
     @pytest.mark.asyncio
     async def test_list_tools_returns_all_tools(self, client: Client) -> None:
-        """Test that list_tools returns all stock tools."""
+        """Test that list_tools returns all stock tools (51 = 53 minus 2 disabled portfolio tools)."""
         tools = await client.list_tools()
 
-        assert len(tools) == 53
+        assert len(tools) == 51
         tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
         assert "get_stock_quote" in tool_names

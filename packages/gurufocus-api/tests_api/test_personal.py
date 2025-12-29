@@ -204,6 +204,9 @@ class TestUserScreenerResultsEndpoint:
         assert len(result) == 3
 
 
+@pytest.mark.skip(
+    reason="Portfolio endpoints disabled as of 2025-12-29 - API not returning valid response"
+)
 class TestPortfoliosEndpoint:
     """Tests for GET /v2/{token}/portfolios endpoint."""
 
@@ -254,6 +257,9 @@ class TestPortfoliosEndpoint:
         assert len(result) == 2
 
 
+@pytest.mark.skip(
+    reason="Portfolio endpoints disabled as of 2025-12-29 - API not returning valid response"
+)
 class TestPortfolioDetailEndpoint:
     """Tests for POST /v2/{token}/portfolios/{id} endpoint."""
 

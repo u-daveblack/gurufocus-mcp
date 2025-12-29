@@ -6,12 +6,12 @@ This document tracks implementation status across both packages:
 
 ## Progress Summary
 
-| Package       | Implemented | Total | Progress |
-| ------------- | ----------- | ----- | -------- |
-| gurufocus-api | 52          | 52    | 100%     |
-| gurufocus-mcp | 53          | 52    | 100%     |
+| Package       | Implemented | Disabled | Total | Progress |
+| ------------- | ----------- | -------- | ----- | -------- |
+| gurufocus-api | 50          | 2        | 52    | 96%      |
+| gurufocus-mcp | 51          | 2        | 52    | 98%      |
 
-Note: MCP has 53 tools (50 endpoint wrappers + 3 analysis/utility tools)
+Note: MCP has 51 tools (48 endpoint wrappers + 3 analysis/utility tools). 2 portfolio endpoints are disabled due to API issues.
 
 ---
 
@@ -181,10 +181,14 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### User Portfolios (V2)
 
+> **⚠️ WARNING (2025-12-29):** The V2 portfolio endpoints are currently disabled. The API at
+> `https://api.gurufocus.com/v2/{token}/portfolios` is not returning valid responses.
+> The code is commented out until the API is fixed.
+
 | Endpoint                               | API                                  | MCP                     | Notes            |
 | -------------------------------------- | ------------------------------------ | ----------------------- | ---------------- |
-| `GET /v2/{api_token}/portfolios`       | ✅ `personal.get_portfolios()`        | ✅ `get_portfolios`      | List portfolios  |
-| `POST /v2/{api_token}/portfolios/{id}` | ✅ `personal.get_portfolio_detail()`  | ✅ `get_portfolio_detail`| Portfolio detail |
+| `GET /v2/{api_token}/portfolios`       | ⚠️ `personal.get_portfolios()`        | ⚠️ `get_portfolios`      | **DISABLED** - API not returning valid response  |
+| `POST /v2/{api_token}/portfolios/{id}` | ⚠️ `personal.get_portfolio_detail()`  | ⚠️ `get_portfolio_detail`| **DISABLED** - API not returning valid response |
 
 ### User Screeners
 
@@ -223,6 +227,6 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | Economic Indicators   | 2/2       | 2/2       | 2               |
 | Exchange & Index Data | 5/5       | 5/5       | 5               |
 | Currency & Calendar   | 2/2       | 2/2       | 2               |
-| Personal Data         | 5/5       | 5/5       | 5               |
+| Personal Data         | 3/5 (2 disabled) | 3/5 (2 disabled) | 5               |
 | ETF Data              | 2/2       | 2/2       | 2               |
-| **Total**             | **52/52** | **50/52** | **52**          |
+| **Total**             | **50/52** | **48/52** | **52**          |
