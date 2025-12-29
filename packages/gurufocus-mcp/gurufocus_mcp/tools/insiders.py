@@ -3,7 +3,7 @@
 Tools for fetching insider trading signals from GuruFocus API.
 """
 
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 
 from fastmcp import Context, FastMCP
 from fastmcp.exceptions import ToolError
@@ -11,6 +11,7 @@ from pydantic import Field
 
 from gurufocus_api.logging import get_logger
 
+from ..context import get_client
 from ..errors import raise_api_error
 from ..formatting import OutputFormat, format_output
 
@@ -61,15 +62,10 @@ def register_insider_tools(mcp: FastMCP) -> None:
         logger.debug("get_insider_updates_called", page=page, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             updates = await client.insiders.get_updates(page=page)
-            data = cast(dict[str, Any], updates.model_dump(mode="json", exclude_none=True))
+            data = updates.model_dump(mode="json", exclude_none=True)
             logger.debug("get_insider_updates_success", page=page, format=format)
             return format_output(data, format)
 
@@ -122,15 +118,10 @@ def register_insider_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             ceo_buys = await client.insiders.get_ceo_buys(page=page, within_days=within_days)
-            data = cast(dict[str, Any], ceo_buys.model_dump(mode="json", exclude_none=True))
+            data = ceo_buys.model_dump(mode="json", exclude_none=True)
             logger.debug("get_insider_ceo_buys_success", page=page, format=format)
             return format_output(data, format)
 
@@ -182,15 +173,10 @@ def register_insider_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             cfo_buys = await client.insiders.get_cfo_buys(page=page, within_days=within_days)
-            data = cast(dict[str, Any], cfo_buys.model_dump(mode="json", exclude_none=True))
+            data = cfo_buys.model_dump(mode="json", exclude_none=True)
             logger.debug("get_insider_cfo_buys_success", page=page, format=format)
             return format_output(data, format)
 
@@ -243,15 +229,10 @@ def register_insider_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             cluster = await client.insiders.get_cluster_buys(page=page, within_days=within_days)
-            data = cast(dict[str, Any], cluster.model_dump(mode="json", exclude_none=True))
+            data = cluster.model_dump(mode="json", exclude_none=True)
             logger.debug("get_insider_cluster_buys_success", page=page, format=format)
             return format_output(data, format)
 
@@ -301,15 +282,10 @@ def register_insider_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             double = await client.insiders.get_double_buys(page=page, within_days=within_days)
-            data = cast(dict[str, Any], double.model_dump(mode="json", exclude_none=True))
+            data = double.model_dump(mode="json", exclude_none=True)
             logger.debug("get_insider_double_buys_success", page=page, format=format)
             return format_output(data, format)
 
@@ -359,15 +335,10 @@ def register_insider_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             triple = await client.insiders.get_triple_buys(page=page, within_days=within_days)
-            data = cast(dict[str, Any], triple.model_dump(mode="json", exclude_none=True))
+            data = triple.model_dump(mode="json", exclude_none=True)
             logger.debug("get_insider_triple_buys_success", page=page, format=format)
             return format_output(data, format)
 
@@ -411,15 +382,10 @@ def register_insider_tools(mcp: FastMCP) -> None:
         logger.debug("get_insider_list_called", page=page, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             insiders = await client.insiders.get_list(page=page)
-            data = cast(dict[str, Any], insiders.model_dump(mode="json", exclude_none=True))
+            data = insiders.model_dump(mode="json", exclude_none=True)
             logger.debug("get_insider_list_success", page=page, format=format)
             return format_output(data, format)
 

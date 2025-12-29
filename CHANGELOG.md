@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### gurufocus-api
+- `stocks.get_operating_data()` - Operating metrics and KPIs (revenue per employee, units shipped, etc.)
+- `stocks.get_segments_data()` - Business and geographic segment revenue breakdown
+- `stocks.get_ownership()` - Current ownership breakdown (institutional, insider, float)
+- `stocks.get_indicator_history()` - Historical ownership indicator data
+- `stocks.get_indicators()` - List of 240+ available stock indicators
+- `stocks.get_indicator()` - Time series data for a specific indicator
+- New `GurusEndpoint` class with 4 guru data methods:
+  - `gurus.get_gurulist()` - List all tracked institutional gurus (~2.6MB dataset)
+  - `gurus.get_guru_picks()` - Guru's stock picks with transaction details
+  - `gurus.get_guru_aggregated()` - Guru's complete aggregated portfolio
+  - `gurus.get_realtime_picks()` - Real-time guru trading activity across all investors
+- New `PoliticiansEndpoint` class with 2 politician trading methods:
+  - `politicians.get_politicians()` - List all tracked politicians (senators, representatives)
+  - `politicians.get_transactions()` - Politician stock transactions with filters
+- New `ReferenceEndpoint` class with 4 reference data methods:
+  - `reference.get_exchange_list()` - List worldwide stock exchanges by country
+  - `reference.get_exchange_stocks()` - Stocks listed on a specific exchange
+  - `reference.get_index_list()` - List worldwide market indexes
+  - `reference.get_index_stocks()` - Stocks in a market index (with pagination)
+- New `EconomicEndpoint` class with 3 economic data methods:
+  - `economic.get_indicators_list()` - List available economic indicators (GDP, CPI, unemployment, etc.)
+  - `economic.get_indicator()` - Time series data for a specific economic indicator
+  - `economic.get_calendar()` - Financial calendar events (earnings, dividends, IPOs, splits)
+
+#### gurufocus-mcp
+- `get_stock_operating_data` - MCP tool for operating metrics and business KPIs
+- `get_stock_segments_data` - MCP tool for business and geographic segment analysis
+- `get_stock_ownership` - MCP tool for ownership breakdown analysis
+- `get_stock_indicator_history` - MCP tool for historical ownership trends
+- `get_stock_indicators` - MCP tool to discover available indicators
+- `get_stock_indicator` - MCP tool for specific indicator time series
+- 4 new guru data tools:
+  - `get_gurulist` - List all tracked super investors
+  - `get_guru_picks` - Get a guru's stock picks and trading activity
+  - `get_guru_aggregated` - Get a guru's complete portfolio with holdings
+  - `get_guru_realtime_picks` - Recent trading activity across all gurus
+- 2 new politician trading tools:
+  - `get_politicians` - List all tracked politicians (senators, representatives)
+  - `get_politician_transactions` - Politician stock transactions with filters
+- 4 new reference data tools:
+  - `get_exchange_list` - List worldwide stock exchanges by country
+  - `get_exchange_stocks` - Stocks listed on a specific exchange
+  - `get_index_list` - List worldwide market indexes (S&P 500, Dow 30, etc.)
+  - `get_index_stocks` - Constituent stocks in a market index
+- 3 new economic data tools:
+  - `get_economic_indicators` - List available economic indicators
+  - `get_economic_indicator` - Time series data for a specific indicator
+  - `get_financial_calendar` - Financial calendar events (earnings, dividends, IPOs, splits)
+
 ## [v0.4.0] - 2025-12-28
 
 ### Added

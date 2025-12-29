@@ -108,6 +108,366 @@ def _parse_stock_guru_holding(data: dict[str, Any]) -> StockGuruHolding:
     )
 
 
+# --- Models for GET /gurulist endpoint ---
+
+
+class GuruListItem(BaseModel):
+    """A single guru from the guru list endpoint."""
+
+    guru_id: str = Field(description="Unique identifier for the guru")
+    name: str = Field(description="Guru or firm name")
+    image_url: str | None = Field(default=None, description="URL to guru image")
+    firm: str | None = Field(default=None, description="Investment firm name")
+    num_stocks: int | None = Field(default=None, description="Number of stocks held")
+    equity: float | None = Field(default=None, description="Portfolio equity value (millions USD)")
+    turnover: int | None = Field(default=None, description="Portfolio turnover rate (%)")
+    last_updated: str | None = Field(default=None, description="Date of last portfolio update")
+    cik: str | None = Field(default=None, description="SEC CIK number")
+    portfolio_date: str | None = Field(default=None, description="Date of portfolio snapshot")
+    fund_ticker: str | None = Field(default=None, description="Fund ticker if applicable")
+
+
+class GuruListResponse(BaseModel):
+    """Response from GET /gurulist endpoint.
+
+    Contains arrays of gurus in different categories (US and Plus).
+    """
+
+    us_gurus: list[GuruListItem] = Field(default_factory=list, description="US institutional gurus")
+    plus_gurus: list[GuruListItem] = Field(default_factory=list, description="GuruFocus Plus gurus")
+    total_count: int = Field(default=0, description="Total number of gurus")
+
+    @classmethod
+    def from_api_response(cls, data: dict[str, Any]) -> "GuruListResponse":
+        """Create GuruListResponse from API response.
+
+        Args:
+            data: Raw JSON response - {"all": {"us": [[...], ...], "plus": [[...], ...]}}
+
+        Returns:
+            Populated GuruListResponse instance
+        """
+        all_data = data.get("all", {})
+        us_raw = all_data.get("us", [])
+        plus_raw = all_data.get("plus", [])
+
+        us_gurus = [_parse_guru_list_item(item) for item in us_raw if isinstance(item, list)]
+        plus_gurus = [_parse_guru_list_item(item) for item in plus_raw if isinstance(item, list)]
+
+        return cls(
+            us_gurus=us_gurus,
+            plus_gurus=plus_gurus,
+            total_count=len(us_gurus) + len(plus_gurus),
+        )
+
+
+def _parse_guru_list_item(item: list[Any]) -> GuruListItem:
+    """Parse a guru list item from array format.
+
+    Array format: [id, name, image, firm, num_stocks, equity, turnover, last_update, cik, port_date, fund_ticker]
+    """
+    return GuruListItem(
+        guru_id=str(item[0]) if len(item) > 0 else "",
+        name=str(item[1]) if len(item) > 1 and item[1] else "",
+        image_url=item[2] if len(item) > 2 and item[2] else None,
+        firm=item[3] if len(item) > 3 and item[3] else None,
+        num_stocks=int(item[4]) if len(item) > 4 and item[4] else None,
+        equity=float(item[5]) if len(item) > 5 and item[5] else None,
+        turnover=int(item[6]) if len(item) > 6 and item[6] else None,
+        last_updated=item[7] if len(item) > 7 and item[7] else None,
+        cik=item[8] if len(item) > 8 and item[8] else None,
+        portfolio_date=item[9] if len(item) > 9 and item[9] else None,
+        fund_ticker=item[10] if len(item) > 10 and item[10] else None,
+    )
+
+
+# --- Models for GET /guru/{id}/aggregated endpoint ---
+
+
+class GuruAggregatedSummary(BaseModel):
+    """Summary data from guru aggregated portfolio."""
+
+    firm: str | None = Field(default=None, description="Investment firm name")
+    num_new: int | None = Field(default=None, description="Number of new positions")
+    number_of_stocks: int | None = Field(default=None, description="Total number of stocks")
+    equity: float | None = Field(default=None, description="Total equity value (millions USD)")
+    turnover: int | None = Field(default=None, description="Portfolio turnover rate (%)")
+    country: str | None = Field(default=None, description="Country of operation")
+    date: str | None = Field(default=None, description="Date of portfolio snapshot")
+
+
+class GuruAggregatedHolding(BaseModel):
+    """A single holding in a guru's aggregated portfolio."""
+
+    symbol: str = Field(description="Stock ticker symbol")
+    company: str | None = Field(default=None, description="Company name")
+    exchange: str | None = Field(default=None, description="Stock exchange")
+    industry: str | None = Field(default=None, description="Industry classification")
+    sector: str | None = Field(default=None, description="Sector classification")
+
+    # Position details
+    shares: int | None = Field(default=None, description="Number of shares held")
+    price: float | None = Field(default=None, description="Current stock price")
+    value: float | None = Field(default=None, description="Position value (thousands USD)")
+    position: float | None = Field(default=None, description="Portfolio weight (%)")
+    pct: float | None = Field(default=None, description="Percentage of company owned")
+
+    # Changes
+    change: str | None = Field(default=None, description="Change description or percentage")
+    share_change_pct: str | None = Field(default=None, description="Share change percentage")
+    impact: float | None = Field(default=None, description="Impact on portfolio")
+
+    # Additional data
+    filing_date: str | None = Field(default=None, description="13F filing date")
+    share_class: str | None = Field(default=None, description="Share class (com, cl a, etc.)")
+    pe: str | None = Field(default=None, description="P/E ratio")
+    dividend_yield: str | None = Field(default=None, description="Dividend yield")
+    market_cap: str | None = Field(default=None, description="Market cap (millions USD)")
+
+
+class GuruAggregatedPortfolio(BaseModel):
+    """Aggregated portfolio for a guru from GET /guru/{id}/aggregated."""
+
+    guru_id: str = Field(description="Unique identifier for the guru")
+    summary: GuruAggregatedSummary = Field(
+        default_factory=GuruAggregatedSummary, description="Portfolio summary"
+    )
+    holdings: list[GuruAggregatedHolding] = Field(
+        default_factory=list, description="Portfolio holdings"
+    )
+
+    @classmethod
+    def from_api_response(cls, data: dict[str, Any], guru_id: str) -> "GuruAggregatedPortfolio":
+        """Create GuruAggregatedPortfolio from API response.
+
+        Args:
+            data: Raw JSON response - {"{guru_id}": {"summary": {...}, "port": [...]}}
+            guru_id: Guru identifier
+
+        Returns:
+            Populated GuruAggregatedPortfolio instance
+        """
+        # Response is keyed by guru_id
+        guru_data = data.get(str(guru_id), data)
+        summary_raw = guru_data.get("summary", {})
+        holdings_raw = guru_data.get("port", [])
+
+        summary = GuruAggregatedSummary(
+            firm=summary_raw.get("firm"),
+            num_new=_get_int(summary_raw, "num_new"),
+            number_of_stocks=_get_int(summary_raw, "number_of_stocks"),
+            equity=_get_float(summary_raw, "equity"),
+            turnover=_get_int(summary_raw, "turnover"),
+            country=summary_raw.get("country"),
+            date=summary_raw.get("date"),
+        )
+
+        holdings = [_parse_aggregated_holding(h) for h in holdings_raw if isinstance(h, dict)]
+
+        return cls(
+            guru_id=str(guru_id),
+            summary=summary,
+            holdings=holdings,
+        )
+
+
+def _parse_aggregated_holding(data: dict[str, Any]) -> GuruAggregatedHolding:
+    """Parse a single aggregated holding from API data."""
+    change = data.get("change", data.get("share_change_pct"))
+    change_str = str(change) if change is not None else None
+
+    return GuruAggregatedHolding(
+        symbol=data.get("symbol", data.get("symbol_ori", "")),
+        company=data.get("company"),
+        exchange=data.get("exchange"),
+        industry=data.get("industry"),
+        sector=data.get("sector"),
+        shares=_get_int(data, "share", "shares"),
+        price=_get_float(data, "price"),
+        value=_get_float(data, "value"),
+        position=_get_float(data, "position"),
+        pct=_get_float(data, "pct"),
+        change=change_str,
+        share_change_pct=str(data.get("share_change_pct"))
+        if data.get("share_change_pct")
+        else None,
+        impact=_get_float(data, "impact"),
+        filing_date=data.get("13f_date"),
+        share_class=data.get("class"),
+        pe=data.get("pe"),
+        dividend_yield=data.get("yield"),
+        market_cap=data.get("mktcap"),
+    )
+
+
+# --- Models for GET /guru/{id}/picks/{start_date}/{page} endpoint ---
+
+
+class GuruPickItem(BaseModel):
+    """A single stock pick from a guru."""
+
+    symbol: str = Field(description="Stock ticker symbol")
+    company: str | None = Field(default=None, description="Company name")
+    exchange: str | None = Field(default=None, description="Stock exchange")
+    industry: str | None = Field(default=None, description="Industry classification")
+    sector: str | None = Field(default=None, description="Sector classification")
+
+    # Trade details
+    guru_name: str | None = Field(default=None, description="Guru name")
+    trade_type: str | None = Field(default=None, description="Type: realtime or quarterly")
+    action: str | None = Field(default=None, description="Trade action (Buy, Sell, Add, Reduce)")
+    comment: str | None = Field(default=None, description="Action description")
+    date: str | None = Field(default=None, description="Recommendation/trade date")
+
+    # Position details
+    current_shares: int | None = Field(default=None, description="Current shares held")
+    share_change: int | None = Field(default=None, description="Change in shares")
+    trans_share: float | None = Field(
+        default=None, description="Transaction impact on portfolio (%)"
+    )
+
+    # Prices
+    price: float | None = Field(default=None, description="Current stock price")
+    rec_price: float | None = Field(default=None, description="Recommendation price")
+    price_min: float | None = Field(default=None, description="Minimum price during period")
+    price_max: float | None = Field(default=None, description="Maximum price during period")
+    change_pct: float | None = Field(default=None, description="Price change percentage")
+
+
+class GuruPicksResponse(BaseModel):
+    """Response from GET /guru/{id}/picks/{start_date}/{page} endpoint."""
+
+    guru_id: str = Field(description="Unique identifier for the guru")
+    guru_name: str = Field(description="Guru or firm name")
+    picks: list[GuruPickItem] = Field(default_factory=list, description="List of stock picks")
+
+    @classmethod
+    def from_api_response(cls, data: dict[str, Any], guru_id: str) -> "GuruPicksResponse":
+        """Create GuruPicksResponse from API response.
+
+        Args:
+            data: Raw JSON response - {"{guru_name}": {"port": [...]}}
+            guru_id: Guru identifier
+
+        Returns:
+            Populated GuruPicksResponse instance
+        """
+        # Response is keyed by guru name
+        guru_name = next(iter(data.keys())) if data else guru_id
+        guru_data = data.get(guru_name, data)
+        picks_raw = guru_data.get("port", [])
+
+        picks = [_parse_guru_pick_item(p) for p in picks_raw if isinstance(p, dict)]
+
+        return cls(
+            guru_id=str(guru_id),
+            guru_name=str(guru_name),
+            picks=picks,
+        )
+
+
+def _parse_guru_pick_item(data: dict[str, Any]) -> GuruPickItem:
+    """Parse a single guru pick item from API data."""
+    return GuruPickItem(
+        symbol=data.get("symbol", data.get("symbol_ori", "")),
+        company=data.get("company"),
+        exchange=data.get("exchange"),
+        industry=data.get("industry"),
+        sector=data.get("sector"),
+        guru_name=data.get("GuruName"),
+        trade_type=data.get("type"),
+        action=data.get("RecmAction"),
+        comment=data.get("comment"),
+        date=data.get("RecmDate"),
+        current_shares=_get_int(data, "share_current"),
+        share_change=_get_int(data, "share_change"),
+        trans_share=_get_float(data, "trans_share"),
+        price=_get_float(data, "price"),
+        rec_price=_get_float(data, "RecmPrice"),
+        price_min=_get_float(data, "price_min"),
+        price_max=_get_float(data, "price_max"),
+        change_pct=_get_float(data, "change"),
+    )
+
+
+# --- Models for GET /guru_realtime_picks endpoint ---
+
+
+class GuruRealtimePickItem(BaseModel):
+    """A single realtime pick from the guru realtime picks endpoint."""
+
+    symbol: str = Field(description="Stock ticker symbol")
+    company: str | None = Field(default=None, description="Company name")
+    exchange: str | None = Field(default=None, description="Stock exchange")
+    guru_name: str | None = Field(default=None, description="Guru name")
+
+    # Trade details
+    action: str | None = Field(default=None, description="Trade action (Add, Reduce, Buy, Sell)")
+    comment: str | None = Field(default=None, description="Action description")
+    date: str | None = Field(default=None, description="Portfolio date")
+
+    # Position details
+    shares: int | None = Field(default=None, description="Current shares held")
+    price: float | None = Field(default=None, description="Current stock price")
+    price_avg: float | None = Field(default=None, description="Average purchase price")
+    change_pct: float | None = Field(default=None, description="Position change percentage")
+    impact: float | None = Field(default=None, description="Portfolio impact (%)")
+    currency: str | None = Field(default=None, description="Currency (e.g., 'USD')")
+
+
+class GuruRealtimePicksResponse(BaseModel):
+    """Response from GET /guru_realtime_picks endpoint.
+
+    Contains paginated realtime guru trading activity.
+    """
+
+    picks: list[GuruRealtimePickItem] = Field(
+        default_factory=list, description="List of realtime picks"
+    )
+    total: int = Field(default=0, description="Total number of picks")
+    current_page: int = Field(default=1, description="Current page number")
+    last_page: int = Field(default=1, description="Last page number")
+
+    @classmethod
+    def from_api_response(cls, data: dict[str, Any]) -> "GuruRealtimePicksResponse":
+        """Create GuruRealtimePicksResponse from API response.
+
+        Args:
+            data: Raw JSON response - {"data": [...], "total": N, "currentPage": "1", "lastPage": N}
+
+        Returns:
+            Populated GuruRealtimePicksResponse instance
+        """
+        picks_raw = data.get("data", [])
+        picks = [_parse_realtime_pick_item(p) for p in picks_raw if isinstance(p, dict)]
+
+        return cls(
+            picks=picks,
+            total=int(data.get("total", len(picks))),
+            current_page=int(data.get("currentPage", 1)),
+            last_page=int(data.get("lastPage", 1)),
+        )
+
+
+def _parse_realtime_pick_item(data: dict[str, Any]) -> GuruRealtimePickItem:
+    """Parse a single realtime pick item from API data."""
+    return GuruRealtimePickItem(
+        symbol=data.get("symbol", ""),
+        company=data.get("company"),
+        exchange=data.get("exchange"),
+        guru_name=data.get("guru_name"),
+        action=data.get("action"),
+        comment=data.get("comment"),
+        date=data.get("portdate"),
+        shares=_get_int(data, "shares"),
+        price=_get_float(data, "price"),
+        price_avg=_get_float(data, "price_avg"),
+        change_pct=_get_float(data, "change"),
+        impact=_get_float(data, "impact"),
+        currency=data.get("currency"),
+    )
+
+
 # --- Models for other guru endpoints (guru portfolios, etc.) ---
 
 

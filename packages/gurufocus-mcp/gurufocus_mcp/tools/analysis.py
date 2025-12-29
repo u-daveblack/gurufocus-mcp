@@ -15,6 +15,7 @@ from gurufocus_api.logging import get_logger
 
 from ..analysis.qgarp import compute_qgarp_analysis
 from ..analysis.risk import compute_risk_analysis
+from ..context import get_client
 from ..errors import raise_api_error, validate_symbol
 from ..formatting import OutputFormat, format_output
 
@@ -91,12 +92,7 @@ def register_analysis_tools(mcp: FastMCP) -> None:
         logger.debug("get_qgarp_analysis_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             # Fetch all required data in parallel (leverages caching)
             summary, keyratios, financials = await asyncio.gather(
@@ -182,12 +178,7 @@ def register_analysis_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_risk_analysis_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             # Fetch required data in parallel
             summary, keyratios = await asyncio.gather(

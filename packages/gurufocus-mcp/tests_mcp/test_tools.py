@@ -32,9 +32,9 @@ class TestToolRegistration:
         assert "get_stock_summary" in tools
 
     def test_tool_count(self, server) -> None:
-        """Test that 14 tools are registered."""
+        """Test that 53 tools are registered."""
         tool_count = len(server._tool_manager._tools)
-        assert tool_count == 21
+        assert tool_count == 53
 
     def test_get_stock_financials_tool_registered(self, server) -> None:
         """Test that get_stock_financials tool is registered."""
@@ -72,14 +72,25 @@ class TestToolDiscovery:
         """Test that list_tools returns all stock tools."""
         tools = await client.list_tools()
 
-        assert len(tools) == 21
+        assert len(tools) == 53
         tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
         assert "get_stock_quote" in tool_names
         assert "get_stock_dividend" in tool_names
+        assert "get_etf_list" in tool_names
+        assert "get_api_usage" in tool_names
+        assert "get_user_screeners" in tool_names
+        assert "get_country_currency" in tool_names
+        assert "get_funda_updated" in tool_names
         assert "get_stock_current_dividend" in tool_names
+        assert "get_exchange_list" in tool_names
+        assert "get_index_list" in tool_names
         assert "get_stock_financials" in tool_names
         assert "get_stock_keyratios" in tool_names
+        # Economic tools
+        assert "get_economic_indicators" in tool_names
+        assert "get_economic_indicator" in tool_names
+        assert "get_financial_calendar" in tool_names
         assert "get_qgarp_analysis" in tool_names
         assert "get_stock_gurus" in tool_names
         assert "get_stock_executives" in tool_names
@@ -87,6 +98,25 @@ class TestToolDiscovery:
         assert "get_stock_price_ohlc" in tool_names
         assert "get_stock_volume" in tool_names
         assert "get_stock_unadjusted_price" in tool_names
+        # Guru tools
+        assert "get_gurulist" in tool_names
+        assert "get_guru_picks" in tool_names
+        assert "get_guru_aggregated" in tool_names
+        assert "get_guru_realtime_picks" in tool_names
+        assert "get_stock_operating_data" in tool_names
+        assert "get_stock_segments_data" in tool_names
+        # Batch 5: Ownership & Indicators
+        assert "get_stock_ownership" in tool_names
+        assert "get_stock_indicator_history" in tool_names
+        assert "get_stock_indicators" in tool_names
+        assert "get_stock_indicator" in tool_names
+        # Batch 7: Politician Data
+        assert "get_politicians" in tool_names
+        assert "get_politician_transactions" in tool_names
+        # News feed
+        assert "get_stock_news_feed" in tool_names
+        # ETF sector weighting
+        assert "get_etf_sector_weighting" in tool_names
 
     @pytest.mark.asyncio
     async def test_tool_has_input_schema(self, client: Client) -> None:
@@ -516,3 +546,301 @@ class TestGetStockTradesHistoryTool:
 
         error_msg = str(exc_info.value).lower()
         assert "invalid" in error_msg or "symbol" in error_msg
+
+
+class TestGetStockOperatingDataTool:
+    """Tests for get_stock_operating_data tool."""
+
+    def test_tool_registered(self, server) -> None:
+        """Test that get_stock_operating_data tool is registered."""
+        tools = list(server._tool_manager._tools.keys())
+        assert "get_stock_operating_data" in tools
+
+    def test_tool_has_description(self, server) -> None:
+        """Test that get_stock_operating_data tool has a description."""
+        tools = server._tool_manager._tools
+        operating_tool = tools.get("get_stock_operating_data")
+
+        assert operating_tool is not None
+        assert operating_tool.description is not None
+        assert "operating" in operating_tool.description.lower()
+
+    @pytest.mark.asyncio
+    async def test_tool_has_symbol_parameter(self, client: Client) -> None:
+        """Test that tool has symbol parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_operating_data"), None)
+
+        assert tool is not None
+        assert "symbol" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_tool_has_format_parameter(self, client: Client) -> None:
+        """Test that tool has format parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_operating_data"), None)
+
+        assert tool is not None
+        assert "format" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_symbol_raises_error(self, client: Client) -> None:
+        """Test that invalid symbol raises ToolError."""
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as exc_info:
+            await client.call_tool("get_stock_operating_data", {"symbol": ""})
+
+        error_msg = str(exc_info.value).lower()
+        assert "invalid" in error_msg or "symbol" in error_msg
+
+
+class TestGetStockSegmentsDataTool:
+    """Tests for get_stock_segments_data tool."""
+
+    def test_tool_registered(self, server) -> None:
+        """Test that get_stock_segments_data tool is registered."""
+        tools = list(server._tool_manager._tools.keys())
+        assert "get_stock_segments_data" in tools
+
+    def test_tool_has_description(self, server) -> None:
+        """Test that get_stock_segments_data tool has a description."""
+        tools = server._tool_manager._tools
+        segments_tool = tools.get("get_stock_segments_data")
+
+        assert segments_tool is not None
+        assert segments_tool.description is not None
+        assert "segment" in segments_tool.description.lower()
+
+    @pytest.mark.asyncio
+    async def test_tool_has_symbol_parameter(self, client: Client) -> None:
+        """Test that tool has symbol parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_segments_data"), None)
+
+        assert tool is not None
+        assert "symbol" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_tool_has_format_parameter(self, client: Client) -> None:
+        """Test that tool has format parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_segments_data"), None)
+
+        assert tool is not None
+        assert "format" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_symbol_raises_error(self, client: Client) -> None:
+        """Test that invalid symbol raises ToolError."""
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as exc_info:
+            await client.call_tool("get_stock_segments_data", {"symbol": ""})
+
+        error_msg = str(exc_info.value).lower()
+        assert "invalid" in error_msg or "symbol" in error_msg
+
+
+class TestGetStockOwnershipTool:
+    """Tests for get_stock_ownership tool."""
+
+    def test_tool_registered(self, server) -> None:
+        """Test that get_stock_ownership tool is registered."""
+        tools = list(server._tool_manager._tools.keys())
+        assert "get_stock_ownership" in tools
+
+    def test_tool_has_description(self, server) -> None:
+        """Test that get_stock_ownership tool has a description."""
+        tools = server._tool_manager._tools
+        ownership_tool = tools.get("get_stock_ownership")
+
+        assert ownership_tool is not None
+        assert ownership_tool.description is not None
+        assert "ownership" in ownership_tool.description.lower()
+
+    @pytest.mark.asyncio
+    async def test_tool_has_symbol_parameter(self, client: Client) -> None:
+        """Test that tool has symbol parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_ownership"), None)
+
+        assert tool is not None
+        assert "symbol" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_tool_has_format_parameter(self, client: Client) -> None:
+        """Test that tool has format parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_ownership"), None)
+
+        assert tool is not None
+        assert "format" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_symbol_raises_error(self, client: Client) -> None:
+        """Test that invalid symbol raises ToolError."""
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as exc_info:
+            await client.call_tool("get_stock_ownership", {"symbol": ""})
+
+        error_msg = str(exc_info.value).lower()
+        assert "invalid" in error_msg or "symbol" in error_msg
+
+
+class TestGetStockIndicatorHistoryTool:
+    """Tests for get_stock_indicator_history tool."""
+
+    def test_tool_registered(self, server) -> None:
+        """Test that get_stock_indicator_history tool is registered."""
+        tools = list(server._tool_manager._tools.keys())
+        assert "get_stock_indicator_history" in tools
+
+    def test_tool_has_description(self, server) -> None:
+        """Test that get_stock_indicator_history tool has a description."""
+        tools = server._tool_manager._tools
+        history_tool = tools.get("get_stock_indicator_history")
+
+        assert history_tool is not None
+        assert history_tool.description is not None
+        assert (
+            "history" in history_tool.description.lower()
+            or "ownership" in history_tool.description.lower()
+        )
+
+    @pytest.mark.asyncio
+    async def test_tool_has_symbol_parameter(self, client: Client) -> None:
+        """Test that tool has symbol parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_indicator_history"), None)
+
+        assert tool is not None
+        assert "symbol" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_tool_has_format_parameter(self, client: Client) -> None:
+        """Test that tool has format parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_indicator_history"), None)
+
+        assert tool is not None
+        assert "format" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_symbol_raises_error(self, client: Client) -> None:
+        """Test that invalid symbol raises ToolError."""
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as exc_info:
+            await client.call_tool("get_stock_indicator_history", {"symbol": ""})
+
+        error_msg = str(exc_info.value).lower()
+        assert "invalid" in error_msg or "symbol" in error_msg
+
+
+class TestGetStockIndicatorsTool:
+    """Tests for get_stock_indicators tool."""
+
+    def test_tool_registered(self, server) -> None:
+        """Test that get_stock_indicators tool is registered."""
+        tools = list(server._tool_manager._tools.keys())
+        assert "get_stock_indicators" in tools
+
+    def test_tool_has_description(self, server) -> None:
+        """Test that get_stock_indicators tool has a description."""
+        tools = server._tool_manager._tools
+        indicators_tool = tools.get("get_stock_indicators")
+
+        assert indicators_tool is not None
+        assert indicators_tool.description is not None
+        assert "indicator" in indicators_tool.description.lower()
+
+    @pytest.mark.asyncio
+    async def test_tool_has_format_parameter(self, client: Client) -> None:
+        """Test that tool has format parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_indicators"), None)
+
+        assert tool is not None
+        assert "format" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_tool_does_not_require_symbol(self, client: Client) -> None:
+        """Test that tool does not require symbol parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_indicators"), None)
+
+        assert tool is not None
+        # Symbol should not be required for this tool
+        required = tool.inputSchema.get("required", [])
+        assert "symbol" not in required
+
+
+class TestGetStockIndicatorTool:
+    """Tests for get_stock_indicator tool."""
+
+    def test_tool_registered(self, server) -> None:
+        """Test that get_stock_indicator tool is registered."""
+        tools = list(server._tool_manager._tools.keys())
+        assert "get_stock_indicator" in tools
+
+    def test_tool_has_description(self, server) -> None:
+        """Test that get_stock_indicator tool has a description."""
+        tools = server._tool_manager._tools
+        indicator_tool = tools.get("get_stock_indicator")
+
+        assert indicator_tool is not None
+        assert indicator_tool.description is not None
+        assert "indicator" in indicator_tool.description.lower()
+
+    @pytest.mark.asyncio
+    async def test_tool_has_symbol_parameter(self, client: Client) -> None:
+        """Test that tool has symbol parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_indicator"), None)
+
+        assert tool is not None
+        assert "symbol" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_tool_has_indicator_key_parameter(self, client: Client) -> None:
+        """Test that tool has indicator_key parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_indicator"), None)
+
+        assert tool is not None
+        assert "indicator_key" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_tool_has_format_parameter(self, client: Client) -> None:
+        """Test that tool has format parameter."""
+        tools = await client.list_tools()
+        tool = next((t for t in tools if t.name == "get_stock_indicator"), None)
+
+        assert tool is not None
+        assert "format" in tool.inputSchema["properties"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_symbol_raises_error(self, client: Client) -> None:
+        """Test that invalid symbol raises ToolError."""
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as exc_info:
+            await client.call_tool(
+                "get_stock_indicator", {"symbol": "", "indicator_key": "net_income"}
+            )
+
+        error_msg = str(exc_info.value).lower()
+        assert "invalid" in error_msg or "symbol" in error_msg
+
+    @pytest.mark.asyncio
+    async def test_invalid_indicator_key_raises_error(self, client: Client) -> None:
+        """Test that invalid indicator_key raises ToolError."""
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as exc_info:
+            await client.call_tool("get_stock_indicator", {"symbol": "AAPL", "indicator_key": ""})
+
+        error_msg = str(exc_info.value).lower()
+        assert "invalid" in error_msg or "indicator" in error_msg

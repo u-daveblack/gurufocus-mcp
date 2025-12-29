@@ -8,8 +8,10 @@ This document tracks implementation status across both packages:
 
 | Package       | Implemented | Total | Progress |
 | ------------- | ----------- | ----- | -------- |
-| gurufocus-api | 22          | 52    | 42%      |
-| gurufocus-mcp | 21          | 52    | 40%      |
+| gurufocus-api | 52          | 52    | 100%     |
+| gurufocus-mcp | 53          | 52    | 100%     |
+
+Note: MCP has 53 tools (50 endpoint wrappers + 3 analysis/utility tools)
 
 ---
 
@@ -17,10 +19,11 @@ This document tracks implementation status across both packages:
 
 These tools compute derived analysis from multiple GuruFocus endpoints:
 
-| Tool                        | Description                                    | Status |
-| --------------------------- | ---------------------------------------------- | ------ |
-| `get_qgarp_analysis`        | QGARP investment screening scorecard           | ✅      |
-| `get_stock_risk_analysis`   | Quantitative risk analysis (5 dimensions)      | ✅      |
+| Tool                        | Description                                         | Status |
+| --------------------------- | --------------------------------------------------- | ------ |
+| `get_qgarp_analysis`        | QGARP investment screening scorecard                | ✅      |
+| `get_stock_risk_analysis`   | Quantitative risk analysis (5 dimensions)           | ✅      |
+| `get_usage_estimate`        | Estimate remaining API calls without using quota    | ✅      |
 
 ---
 
@@ -46,10 +49,10 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Ownership Data
 
-| Endpoint                                | API | MCP | Notes                |
-| --------------------------------------- | --- | --- | -------------------- |
-| `GET /stock/{symbol}/indicator_history` | ❌   | ❌   | Historical ownership |
-| `GET /stock/{symbol}/ownership`         | ❌   | ❌   | Current ownership    |
+| Endpoint                                | API                                | MCP                               | Notes                |
+| --------------------------------------- | ---------------------------------- | --------------------------------- | -------------------- |
+| `GET /stock/{symbol}/indicator_history` | ✅ `stocks.get_indicator_history()` | ✅ `get_stock_indicator_history`   | Historical ownership |
+| `GET /stock/{symbol}/ownership`         | ✅ `stocks.get_ownership()`         | ✅ `get_stock_ownership`           | Current ownership    |
 
 ### Trading Activity
 
@@ -69,30 +72,30 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Estimates & Forecasts
 
-| Endpoint                               | API                                | MCP | Notes            |
-| -------------------------------------- | ---------------------------------- | --- | ---------------- |
-| `GET /stock/{symbol}/analyst_estimate` | ✅ `stocks.get_analyst_estimates()` | ❌   |                  |
-| `GET /stock/{symbol}/estimate_history` | ❌                                  | ❌   | Forecast history |
+| Endpoint                               | API                                 | MCP                               | Notes            |
+| -------------------------------------- | ----------------------------------- | --------------------------------- | ---------------- |
+| `GET /stock/{symbol}/analyst_estimate` | ✅ `stocks.get_analyst_estimates()`  | ✅ `get_stock_analyst_estimates`   |                  |
+| `GET /stock/{symbol}/estimate_history` | ✅ `stocks.get_estimate_history()`   | ✅ `get_stock_estimate_history`    | Forecast history |
 
 ### Operating & Segment Data
 
-| Endpoint                             | API | MCP | Notes |
-| ------------------------------------ | --- | --- | ----- |
-| `GET /stock/{symbol}/operating_data` | ❌   | ❌   |       |
-| `GET /stock/{symbol}/segments_data`  | ❌   | ❌   |       |
+| Endpoint                             | API                               | MCP                            | Notes                          |
+| ------------------------------------ | --------------------------------- | ------------------------------ | ------------------------------ |
+| `GET /stock/{symbol}/operating_data` | ✅ `stocks.get_operating_data()`   | ✅ `get_stock_operating_data`   | Business operating metrics/KPIs |
+| `GET /stock/{symbol}/segments_data`  | ✅ `stocks.get_segments_data()`    | ✅ `get_stock_segments_data`    | Business & geographic segments |
 
 ### Indicators
 
-| Endpoint                              | API | MCP | Notes               |
-| ------------------------------------- | --- | --- | ------------------- |
-| `GET /stock/indicators`               | ❌   | ❌   | List all indicators |
-| `GET /stock/{symbol}/{indicator_key}` | ❌   | ❌   | Specific indicator  |
+| Endpoint                              | API                           | MCP                      | Notes               |
+| ------------------------------------- | ----------------------------- | ------------------------ | ------------------- |
+| `GET /stock/indicators`               | ✅ `stocks.get_indicators()`   | ✅ `get_stock_indicators` | List all indicators |
+| `GET /stock/{symbol}/{indicator_key}` | ✅ `stocks.get_indicator()`    | ✅ `get_stock_indicator`  | Specific indicator  |
 
 ### News
 
-| Endpoint               | API | MCP | Notes           |
-| ---------------------- | --- | --- | --------------- |
-| `GET /stock/news_feed` | ❌   | ❌   | Stock headlines |
+| Endpoint               | API                          | MCP                      | Notes                          |
+| ---------------------- | ---------------------------- | ------------------------ | ------------------------------ |
+| `GET /stock/news_feed` | ✅ `stocks.get_news_feed()`   | ✅ `get_stock_news_feed`  | Optional symbol filter support |
 
 ---
 
@@ -100,12 +103,12 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Guru Data
 
-| Endpoint                                   | API | MCP | Notes                                  |
-| ------------------------------------------ | --- | --- | -------------------------------------- |
-| `GET /gurulist`                            | ❌   | ❌   | All gurus                              |
-| `GET /guru/{id}/picks/{start_date}/{page}` | ❌   | ❌   | Optional: `end_date`                   |
-| `GET /guru/{id}/aggregated`                | ❌   | ❌   | Optional: `page`, `portdate`           |
-| `GET /guru_realtime_picks`                 | ❌   | ❌   | Optional: `page`, `action`, `portdate` |
+| Endpoint                                   | API                              | MCP                         | Notes                                  |
+| ------------------------------------------ | -------------------------------- | --------------------------- | -------------------------------------- |
+| `GET /gurulist`                            | ✅ `gurus.get_gurulist()`         | ✅ `get_gurulist`            | All gurus (~2.6MB)                     |
+| `GET /guru/{id}/picks/{start_date}/{page}` | ✅ `gurus.get_guru_picks()`       | ✅ `get_guru_picks`          | Optional: `start_date`, `page`         |
+| `GET /guru/{id}/aggregated`                | ✅ `gurus.get_guru_aggregated()`  | ✅ `get_guru_aggregated`     | Full portfolio with holdings           |
+| `GET /guru_realtime_picks`                 | ✅ `gurus.get_realtime_picks()`   | ✅ `get_guru_realtime_picks` | Optional: `page`                       |
 
 ### Insider Data
 
@@ -121,19 +124,19 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Politician Data
 
-| Endpoint                        | API | MCP | Notes                                                 |
-| ------------------------------- | --- | --- | ----------------------------------------------------- |
-| `GET /politicians`              | ❌   | ❌   | Politician list                                       |
-| `GET /politicians/transactions` | ❌   | ❌   | Optional: `page`, `asset_type`, `id`, `sort`, `order` |
+| Endpoint                        | API                                    | MCP                              | Notes                                                 |
+| ------------------------------- | -------------------------------------- | -------------------------------- | ----------------------------------------------------- |
+| `GET /politicians`              | ✅ `politicians.get_politicians()`      | ✅ `get_politicians`              | Politician list                                       |
+| `GET /politicians/transactions` | ✅ `politicians.get_transactions()`     | ✅ `get_politician_transactions`  | Optional: `page`, `asset_type`, `id`, `sort`, `order` |
 
 ---
 
 ## Economic Indicators Data Endpoints
 
-| Endpoint                                   | API | MCP | Notes               |
-| ------------------------------------------ | --- | --- | ------------------- |
-| `GET /economicindicators`                  | ❌   | ❌   | List all indicators |
-| `GET /economicindicators/item/{indicator}` | ❌   | ❌   | Specific indicator  |
+| Endpoint                                   | API                                    | MCP                          | Notes               |
+| ------------------------------------------ | -------------------------------------- | ---------------------------- | ------------------- |
+| `GET /economicindicators`                  | ✅ `economic.get_indicators_list()`     | ✅ `get_economic_indicators`  | List all indicators |
+| `GET /economicindicators/item/{indicator}` | ✅ `economic.get_indicator()`           | ✅ `get_economic_indicator`   | Specific indicator  |
 
 ---
 
@@ -141,30 +144,30 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### Exchange & Stock Lists
 
-| Endpoint                               | API | MCP | Notes                |
-| -------------------------------------- | --- | --- | -------------------- |
-| `GET /exchange_list`                   | ❌   | ❌   | Worldwide exchanges  |
-| `GET /exchange_stocks/{exchange_name}` | ❌   | ❌   | Stocks in exchange   |
-| `GET /funda_updated/{date}`            | ❌   | ❌   | Updated fundamentals |
+| Endpoint                               | API                                  | MCP                     | Notes                |
+| -------------------------------------- | ------------------------------------ | ----------------------- | -------------------- |
+| `GET /exchange_list`                   | ✅ `reference.get_exchange_list()`    | ✅ `get_exchange_list`   | Worldwide exchanges  |
+| `GET /exchange_stocks/{exchange_name}` | ✅ `reference.get_exchange_stocks()`  | ✅ `get_exchange_stocks` | Stocks in exchange   |
+| `GET /funda_updated/{date}`            | ✅ `reference.get_funda_updated()`    | ✅ `get_funda_updated`   | Updated fundamentals |
 
 ### Currency
 
-| Endpoint                | API | MCP | Notes            |
-| ----------------------- | --- | --- | ---------------- |
-| `GET /country_currency` | ❌   | ❌   | Currency symbols |
+| Endpoint                | API                                   | MCP                      | Notes            |
+| ----------------------- | ------------------------------------- | ------------------------ | ---------------- |
+| `GET /country_currency` | ✅ `reference.get_country_currency()`  | ✅ `get_country_currency` | Currency symbols |
 
 ### Index Data
 
-| Endpoint                           | API | MCP | Notes             |
-| ---------------------------------- | --- | --- | ----------------- |
-| `GET /index_list`                  | ❌   | ❌   | Worldwide indexes |
-| `GET /index_stocks/{index_symbol}` | ❌   | ❌   | Optional: `page`  |
+| Endpoint                           | API                                | MCP                   | Notes             |
+| ---------------------------------- | ---------------------------------- | --------------------- | ----------------- |
+| `GET /index_list`                  | ✅ `reference.get_index_list()`     | ✅ `get_index_list`    | Worldwide indexes |
+| `GET /index_stocks/{index_symbol}` | ✅ `reference.get_index_stocks()`   | ✅ `get_index_stocks`  | Optional: `page`  |
 
 ### Financial Calendars
 
-| Endpoint        | API | MCP | Notes                              |
-| --------------- | --- | --- | ---------------------------------- |
-| `GET /calendar` | ❌   | ❌   | Required: `date`; Optional: `type` |
+| Endpoint        | API                           | MCP                          | Notes                              |
+| --------------- | ----------------------------- | ---------------------------- | ---------------------------------- |
+| `GET /calendar` | ✅ `economic.get_calendar()`   | ✅ `get_financial_calendar`   | Required: `date`; Optional: `type` |
 
 ---
 
@@ -172,32 +175,32 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 
 ### API Usage
 
-| Endpoint         | API | MCP | Notes             |
-| ---------------- | --- | --- | ----------------- |
-| `GET /api_usage` | ❌   | ❌   | Usage information |
+| Endpoint         | API                            | MCP                  | Notes             |
+| ---------------- | ------------------------------ | -------------------- | ----------------- |
+| `GET /api_usage` | ✅ `personal.get_api_usage()`   | ✅ `get_api_usage`    | Usage information |
 
 ### User Portfolios (V2)
 
-| Endpoint                               | API | MCP | Notes            |
-| -------------------------------------- | --- | --- | ---------------- |
-| `GET /v2/{api_token}/portfolios`       | ❌   | ❌   | List portfolios  |
-| `POST /v2/{api_token}/portfolios/{id}` | ❌   | ❌   | Portfolio detail |
+| Endpoint                               | API                                  | MCP                     | Notes            |
+| -------------------------------------- | ------------------------------------ | ----------------------- | ---------------- |
+| `GET /v2/{api_token}/portfolios`       | ✅ `personal.get_portfolios()`        | ✅ `get_portfolios`      | List portfolios  |
+| `POST /v2/{api_token}/portfolios/{id}` | ✅ `personal.get_portfolio_detail()`  | ✅ `get_portfolio_detail`| Portfolio detail |
 
 ### User Screeners
 
-| Endpoint                                   | API | MCP | Notes             |
-| ------------------------------------------ | --- | --- | ----------------- |
-| `GET /user_screeners`                      | ❌   | ❌   | List screeners    |
-| `GET /user_screeners/{screener_id}/{page}` | ❌   | ❌   | Premium Plus only |
+| Endpoint                                   | API                                       | MCP                            | Notes             |
+| ------------------------------------------ | ----------------------------------------- | ------------------------------ | ----------------- |
+| `GET /user_screeners`                      | ✅ `personal.get_user_screeners()`         | ✅ `get_user_screeners`         | List screeners    |
+| `GET /user_screeners/{screener_id}/{page}` | ✅ `personal.get_user_screener_results()`  | ✅ `get_user_screener_results`  | Premium Plus only |
 
 ---
 
 ## ETF Data Endpoints
 
-| Endpoint                          | API | MCP | Notes                        |
-| --------------------------------- | --- | --- | ---------------------------- |
-| `GET /etf/etf_list`               | ❌   | ❌   | Optional: `page`, `per_page` |
-| `GET /etf/{ETF}/sector_weighting` | ❌   | ❌   | Sector weighting             |
+| Endpoint                          | API                       | MCP                | Notes                        |
+| --------------------------------- | ------------------------- | ------------------ | ---------------------------- |
+| `GET /etf/etf_list`               | ✅ `etfs.get_etf_list()`   | ✅ `get_etf_list`   | Optional: `page`, `per_page` |
+| `GET /etf/{ETF}/sector_weighting` | ✅ `etfs.get_sector_weighting()` | ✅ `get_etf_sector_weighting` | Sector & industry weightings |
 
 ---
 
@@ -207,18 +210,19 @@ These tools compute derived analysis from multiple GuruFocus endpoints:
 | --------------------- | --------- | --------- | --------------- |
 | Stock Summary & Basic | 4/4       | 4/4       | 4               |
 | Price & Volume        | 4/4       | 3/4       | 4               |
-| Ownership             | 0/2       | 0/2       | 2               |
+| Ownership             | 2/2       | 2/2       | 2               |
 | Trading Activity      | 4/4       | 3/4       | 4               |
 | Dividend              | 2/2       | 2/2       | 2               |
-| Estimates & Forecasts | 1/2       | 0/2       | 2               |
-| Operating & Segment   | 0/2       | 0/2       | 2               |
-| Indicators            | 0/2       | 0/2       | 2               |
-| News                  | 0/1       | 0/1       | 1               |
-| Guru Data             | 0/4       | 0/4       | 4               |
+| Estimates & Forecasts | 2/2       | 2/2       | 2               |
+| Operating & Segment   | 2/2       | 2/2       | 2               |
+| Indicators            | 2/2       | 2/2       | 2               |
+| News                  | 1/1       | 1/1       | 1               |
+| Guru Data             | 4/4       | 4/4       | 4               |
 | Insider Data          | 7/7       | 7/7       | 7               |
-| Politician Data       | 0/2       | 0/2       | 2               |
-| Economic Indicators   | 0/2       | 0/2       | 2               |
-| General Data          | 0/7       | 0/7       | 7               |
-| Personal Data         | 0/5       | 0/5       | 5               |
-| ETF Data              | 0/2       | 0/2       | 2               |
-| **Total**             | **22/52** | **21/52** | **52**          |
+| Politician Data       | 2/2       | 2/2       | 2               |
+| Economic Indicators   | 2/2       | 2/2       | 2               |
+| Exchange & Index Data | 5/5       | 5/5       | 5               |
+| Currency & Calendar   | 2/2       | 2/2       | 2               |
+| Personal Data         | 5/5       | 5/5       | 5               |
+| ETF Data              | 2/2       | 2/2       | 2               |
+| **Total**             | **52/52** | **50/52** | **52**          |

@@ -3,7 +3,7 @@
 Tools for fetching stock financial data from GuruFocus API.
 """
 
-from typing import Annotated, Any, Literal, cast
+from typing import Annotated, Any, Literal
 
 from fastmcp import Context, FastMCP
 from fastmcp.exceptions import ToolError
@@ -11,6 +11,7 @@ from pydantic import Field
 
 from gurufocus_api.logging import get_logger
 
+from ..context import get_client
 from ..errors import raise_api_error, validate_symbol
 from ..formatting import OutputFormat, format_output
 
@@ -66,15 +67,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_summary_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             summary = await client.stocks.get_summary(normalized)
-            data = cast(dict[str, Any], summary.model_dump(mode="json", exclude_none=True))
+            data = summary.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_summary_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -127,15 +123,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_quote_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             quote = await client.stocks.get_quote(normalized)
-            data = cast(dict[str, Any], quote.model_dump(mode="json", exclude_none=True))
+            data = quote.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_quote_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -188,15 +179,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_dividend_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             dividends = await client.stocks.get_dividends(normalized)
-            data = cast(dict[str, Any], dividends.model_dump(mode="json", exclude_none=True))
+            data = dividends.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_dividend_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -249,15 +235,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_current_dividend_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             current_div = await client.stocks.get_current_dividend(normalized)
-            data = cast(dict[str, Any], current_div.model_dump(mode="json", exclude_none=True))
+            data = current_div.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_current_dividend_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -323,15 +304,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             financials = await client.stocks.get_financials(normalized, period_type=period_type)
-            data = cast(dict[str, Any], financials.model_dump(mode="json", exclude_none=True))
+            data = financials.model_dump(mode="json", exclude_none=True)
             logger.debug(
                 "get_stock_financials_success",
                 symbol=normalized,
@@ -391,15 +367,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_keyratios_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             keyratios = await client.stocks.get_keyratios(normalized)
-            data = cast(dict[str, Any], keyratios.model_dump(mode="json", exclude_none=True))
+            data = keyratios.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_keyratios_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -456,15 +427,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_gurus_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             gurus = await client.stocks.get_gurus(normalized)
-            data = cast(dict[str, Any], gurus.model_dump(mode="json", exclude_none=True))
+            data = gurus.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_gurus_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -513,15 +479,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_executives_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             executives = await client.stocks.get_executives(normalized)
-            data = cast(dict[str, Any], executives.model_dump(mode="json", exclude_none=True))
+            data = executives.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_executives_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -574,15 +535,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         logger.debug("get_stock_trades_history_called", symbol=normalized, format=format)
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             trades = await client.stocks.get_trades_history(normalized)
-            data = cast(dict[str, Any], trades.model_dump(mode="json", exclude_none=True))
+            data = trades.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_trades_history_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -656,17 +612,12 @@ def register_stock_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             ohlc = await client.stocks.get_price_ohlc(
                 normalized, start_date=start_date, end_date=end_date
             )
-            data = cast(dict[str, Any], ohlc.model_dump(mode="json", exclude_none=True))
+            data = ohlc.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_price_ohlc_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -735,17 +686,12 @@ def register_stock_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             volume = await client.stocks.get_volume(
                 normalized, start_date=start_date, end_date=end_date
             )
-            data = cast(dict[str, Any], volume.model_dump(mode="json", exclude_none=True))
+            data = volume.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_volume_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -816,17 +762,12 @@ def register_stock_tools(mcp: FastMCP) -> None:
         )
 
         try:
-            client = getattr(ctx.fastmcp, "state", {}).get("client")
-            if client is None:
-                raise ToolError(
-                    "GuruFocus client not initialized. "
-                    "Please ensure GURUFOCUS_API_TOKEN environment variable is set."
-                )
+            client = get_client(ctx)
 
             prices = await client.stocks.get_unadjusted_price(
                 normalized, start_date=start_date, end_date=end_date
             )
-            data = cast(dict[str, Any], prices.model_dump(mode="json", exclude_none=True))
+            data = prices.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_unadjusted_price_success", symbol=normalized, format=format)
             return format_output(data, format)
 
@@ -834,4 +775,526 @@ def register_stock_tools(mcp: FastMCP) -> None:
             raise
         except Exception as e:
             logger.error("get_stock_unadjusted_price_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_operating_data(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get operating metrics and KPIs for a stock.
+
+        Returns operational data and key performance indicators:
+        - metrics: Dictionary of operating metrics by key
+          - name: Human-readable metric name
+          - key: Metric identifier
+          - data: Time series data
+            - annual: Annual values by fiscal year (e.g., {"2023-12": 1000000})
+            - quarterly: Quarterly values by period (e.g., {"2023-Q4": 250000})
+
+        Common operating metrics include:
+        - Revenue per employee, units shipped, active users
+        - Production capacity, utilization rates
+        - Customer counts, average revenue per user (ARPU)
+        - Industry-specific KPIs (e.g., same-store sales, load factor)
+
+        Use this tool when you need to analyze operational efficiency,
+        track business KPIs beyond financial statements, or compare
+        operating performance across periods.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_operating_data_called", symbol=normalized, format=format)
+
+        try:
+            client = get_client(ctx)
+
+            operating_data = await client.stocks.get_operating_data(normalized)
+            data = operating_data.model_dump(mode="json", exclude_none=True)
+            logger.debug("get_stock_operating_data_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_operating_data_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_segments_data(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get business and geographic segment data for a stock.
+
+        Returns revenue breakdown by business segment and geographic region:
+        - business: Business segment breakdown
+          - annual: Annual revenue by segment and fiscal year
+          - quarterly: Quarterly revenue by segment
+          - ttm: Trailing twelve months data
+          - keys: List of segment names
+        - geographic: Geographic segment breakdown
+          - annual: Annual revenue by region and fiscal year
+          - quarterly: Quarterly revenue by region
+          - ttm: Trailing twelve months data
+          - keys: List of region names
+
+        Use this tool when you need to understand:
+        - Revenue diversification across product lines or services
+        - Geographic exposure and international revenue mix
+        - Segment growth trends and margin differences
+        - Business model composition analysis
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_segments_data_called", symbol=normalized, format=format)
+
+        try:
+            client = get_client(ctx)
+
+            segments_data = await client.stocks.get_segments_data(normalized)
+            data = segments_data.model_dump(mode="json", exclude_none=True)
+            logger.debug("get_stock_segments_data_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_segments_data_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_ownership(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get ownership breakdown for a stock.
+
+        Returns current ownership structure including:
+        - Shares outstanding
+        - Institutional ownership percentage and shares
+        - Insider ownership percentage and shares
+        - Float percentage
+
+        Use this tool to understand who owns the stock and ownership distribution.
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_ownership_called", symbol=normalized, format=format)
+
+        try:
+            client = get_client(ctx)
+
+            ownership = await client.stocks.get_ownership(normalized)
+            data = ownership.model_dump(mode="json", exclude_none=True)
+            logger.debug("get_stock_ownership_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_ownership_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_indicator_history(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get historical ownership indicator data for a stock.
+
+        Returns time series data including:
+        - Historical institutional ownership percentage and shares
+        - Historical shares outstanding
+        - Historical institution shares held
+
+        Use this tool to analyze ownership trends over time.
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_indicator_history_called", symbol=normalized, format=format)
+
+        try:
+            client = get_client(ctx)
+
+            history = await client.stocks.get_indicator_history(normalized)
+            data = history.model_dump(mode="json", exclude_none=True)
+            logger.debug("get_stock_indicator_history_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_indicator_history_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_indicators(
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get list of available stock indicators.
+
+        Returns all 240+ available indicators that can be queried for individual stocks.
+        Each indicator has:
+        - key: The indicator key for API calls (e.g., 'net_income', 'roe')
+        - name: Human-readable name
+
+        Use this tool to discover what indicators are available before
+        querying specific indicator values with get_stock_indicator.
+        """
+        logger.debug("get_stock_indicators_called", format=format)
+
+        try:
+            client = get_client(ctx)
+
+            indicators = await client.stocks.get_indicators()
+            data = indicators.model_dump(mode="json", exclude_none=True)
+            logger.debug("get_stock_indicators_success", format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_indicators_error", error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_indicator(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        indicator_key: Annotated[
+            str,
+            Field(description="Indicator key (e.g., 'net_income', 'roe', 'gross_margin')"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get time series data for a specific indicator.
+
+        Returns historical values for a specific indicator key.
+        Common indicators include:
+        - net_income, revenue, gross_profit
+        - roe, roa, roic
+        - gross_margin, operating_margin, net_margin
+        - pettm, ps_ratio, pb_ratio
+
+        Use get_stock_indicators first to see all available indicator keys.
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        if not indicator_key or not indicator_key.strip():
+            raise ToolError(
+                "Invalid indicator key. Please provide a valid indicator key "
+                "(e.g., 'net_income', 'roe'). Use get_stock_indicators to see available options."
+            )
+
+        indicator_key = indicator_key.strip().lower()
+        logger.debug(
+            "get_stock_indicator_called",
+            symbol=normalized,
+            indicator_key=indicator_key,
+            format=format,
+        )
+
+        try:
+            client = get_client(ctx)
+
+            indicator = await client.stocks.get_indicator(normalized, indicator_key)
+            data = indicator.model_dump(mode="json", exclude_none=True)
+            logger.debug(
+                "get_stock_indicator_success",
+                symbol=normalized,
+                indicator_key=indicator_key,
+                format=format,
+            )
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error(
+                "get_stock_indicator_error",
+                symbol=normalized,
+                indicator_key=indicator_key,
+                error=str(e),
+            )
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_analyst_estimates(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get analyst estimates and ratings for a stock.
+
+        Returns consensus analyst estimates including:
+        - current_estimates: Current EPS and revenue estimates
+          - eps_current_year: Consensus EPS estimate for current year
+          - eps_next_year: Consensus EPS estimate for next year
+          - revenue_current_year: Consensus revenue estimate for current year
+          - revenue_next_year: Consensus revenue estimate for next year
+        - growth_estimates: Expected growth rates
+          - eps_growth_current_year: Expected EPS growth for current year
+          - eps_growth_next_year: Expected EPS growth for next year
+          - revenue_growth_current_year: Expected revenue growth for current year
+          - revenue_growth_next_year: Expected revenue growth for next year
+        - analyst_coverage: Number of analysts covering the stock
+        - target_price: Consensus price target
+
+        Use this tool when you need analyst consensus forecasts, earnings
+        expectations, or price targets for investment analysis.
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_analyst_estimates_called", symbol=normalized, format=format)
+
+        try:
+            client = get_client(ctx)
+
+            estimates = await client.stocks.get_analyst_estimates(normalized)
+            data = estimates.model_dump(mode="json", exclude_none=True)
+            logger.debug("get_stock_analyst_estimates_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_analyst_estimates_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_estimate_history(
+        symbol: Annotated[
+            str,
+            Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
+        ],
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get historical analyst estimate revisions for a stock.
+
+        Returns historical consensus estimate data showing how analyst
+        forecasts have evolved over time:
+        - metrics: Dictionary of estimate metrics by key
+          - eps_estimate: EPS estimates over time
+          - revenue_estimate: Revenue estimates over time
+          - periods: Fiscal periods with estimates (annual, quarterly)
+            - original: Original estimate when first published
+            - current: Current consensus estimate
+            - change: Revision from original
+            - revision_date: When estimate was last revised
+            - num_analysts: Number of analysts contributing
+
+        Use this tool when you need to:
+        - Track how analyst expectations have changed over time
+        - Identify estimate revisions (upgrades/downgrades)
+        - Compare original forecasts vs current consensus
+        - Analyze analyst sentiment trends
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = validate_symbol(symbol)
+        if not normalized:
+            raise ToolError(
+                f"Invalid symbol format: '{symbol}'. "
+                "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+            )
+
+        logger.debug("get_stock_estimate_history_called", symbol=normalized, format=format)
+
+        try:
+            client = get_client(ctx)
+
+            history = await client.stocks.get_estimate_history(normalized)
+            data = history.model_dump(mode="json", exclude_none=True)
+            logger.debug("get_stock_estimate_history_success", symbol=normalized, format=format)
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_estimate_history_error", symbol=normalized, error=str(e))
+            raise_api_error(e)
+
+    @mcp.tool
+    async def get_stock_news_feed(
+        symbol: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description="Optional stock ticker to filter news (e.g., AAPL, MSFT). If not provided, returns general market news.",
+            ),
+        ] = None,
+        format: Annotated[
+            OutputFormat,
+            Field(
+                default="toon",
+                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+            ),
+        ] = "toon",
+        ctx: Context = None,  # type: ignore[assignment]
+    ) -> str | dict[str, Any]:
+        """Get latest stock market news feed.
+
+        Returns recent news headlines and articles from GuruFocus covering:
+        - Market events and trends
+        - Company announcements and analysis
+        - Earnings reports and financial news
+        - Analyst commentary and ratings
+
+        Each news item includes:
+        - date: Publication date/time
+        - headline: News headline
+        - url: Link to full article
+
+        Use this tool when you need to:
+        - Get latest news for a specific stock
+        - Monitor market-wide news and events
+        - Research recent developments affecting a company
+        - Stay updated on financial market trends
+
+        The 'format' parameter controls output encoding:
+        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
+        - 'json': Standard JSON format for debugging or compatibility
+        """
+        normalized = None
+        if symbol:
+            normalized = validate_symbol(symbol)
+            if not normalized:
+                raise ToolError(
+                    f"Invalid symbol format: '{symbol}'. "
+                    "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
+                )
+
+        logger.debug("get_stock_news_feed_called", symbol=normalized, format=format)
+
+        try:
+            client = get_client(ctx)
+
+            news = await client.stocks.get_news_feed(symbol=normalized)
+            data = news.model_dump(mode="json", exclude_none=True)
+            logger.debug(
+                "get_stock_news_feed_success", symbol=normalized, count=news.count, format=format
+            )
+            return format_output(data, format)
+
+        except ToolError:
+            raise
+        except Exception as e:
+            logger.error("get_stock_news_feed_error", symbol=normalized, error=str(e))
             raise_api_error(e)
