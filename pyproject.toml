@@ -1,6 +1,6 @@
 [project]
 name = "gurufocus-mcp-workspace"
-version = "0.4.0"
+version = "0.5.0"
 description = "GuruFocus MCP Server and Python API Library"
 readme = "README.md"
 license = "MIT"
@@ -69,7 +69,7 @@ testpaths = ["packages/gurufocus-api/tests_api", "packages/gurufocus-mcp/tests_m
 addopts = "-ra -q --import-mode=importlib"
 
 [tool.bumpver]
-current_version = "0.4.0"
+current_version = "0.5.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "chore: bump version {old_version} -> {new_version}"
 commit = true
