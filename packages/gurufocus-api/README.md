@@ -10,11 +10,7 @@ A Python client library for the GuruFocus API with async support, Pydantic model
 - Rate limiting and retry logic
 - Full GuruFocus API coverage
 
-## Implementation Status
-
-**Progress: 22 of 52 endpoints (42%)**
-
-See [Implementation Tracker](../../docs/implementation_tracker.md) for full details.
+## Implemented Endpoints
 
 ### Stock Endpoints
 
@@ -29,12 +25,20 @@ See [Implementation Tracker](../../docs/implementation_tracker.md) for full deta
 | `GET /stock/{symbol}/volume`           | `stocks.get_volume()`            |
 | `GET /stock/{symbol}/unadjusted_price` | `stocks.get_unadjusted_price()`  |
 | `GET /stock/{symbol}/analyst_estimate` | `stocks.get_analyst_estimates()` |
+| `GET /stock/{symbol}/estimate_history` | `stocks.get_estimate_history()`  |
 | `GET /stock/{symbol}/dividend`         | `stocks.get_dividends()`         |
 | `GET /stock/{symbol}/current_dividend` | `stocks.get_current_dividend()`  |
 | `GET /stock/{symbol}/insider`          | `stocks.get_insider_trades()`    |
 | `GET /stock/{symbol}/gurus`            | `stocks.get_gurus()`             |
 | `GET /stock/{symbol}/executives`       | `stocks.get_executives()`        |
 | `GET /stock/{symbol}/trades/history`   | `stocks.get_trades_history()`    |
+| `GET /stock/{symbol}/operating_data`   | `stocks.get_operating_data()`    |
+| `GET /stock/{symbol}/segments`         | `stocks.get_segments_data()`     |
+| `GET /stock/{symbol}/ownership`        | `stocks.get_ownership()`         |
+| `GET /stock/{symbol}/indicator_history`| `stocks.get_indicator_history()` |
+| `GET /stock/{symbol}/indicators`       | `stocks.get_indicators()`        |
+| `GET /stock/{symbol}/indicator`        | `stocks.get_indicator()`         |
+| `GET /stock/{symbol}/news`             | `stocks.get_news_feed()`         |
 
 ### Insider Activity Endpoints
 
@@ -49,6 +53,56 @@ See [Implementation Tracker](../../docs/implementation_tracker.md) for full deta
 | `GET /insider_list`                     | `insiders.get_list()`         |
 
 All insider endpoints support pagination with async iterators (e.g., `insiders.iter_ceo_buys()`).
+
+### Guru Endpoints
+
+| Endpoint                 | Method                      |
+| ------------------------ | --------------------------- |
+| `GET /gurulist`          | `gurus.get_gurulist()`      |
+| `GET /guru/picks`        | `gurus.get_guru_picks()`    |
+| `GET /guru/aggregated`   | `gurus.get_guru_aggregated()`|
+| `GET /guru/realtime`     | `gurus.get_realtime_picks()`|
+
+### Politician Endpoints
+
+| Endpoint                     | Method                          |
+| ---------------------------- | ------------------------------- |
+| `GET /politicians`           | `politicians.get_politicians()` |
+| `GET /politician/transaction`| `politicians.get_transactions()`|
+
+### Reference Data Endpoints
+
+| Endpoint               | Method                           |
+| ---------------------- | -------------------------------- |
+| `GET /exchange_list`   | `reference.get_exchange_list()`  |
+| `GET /exchange_stocks` | `reference.get_exchange_stocks()`|
+| `GET /index_list`      | `reference.get_index_list()`     |
+| `GET /index_stocks`    | `reference.get_index_stocks()`   |
+| `GET /country_currency`| `reference.get_country_currency()`|
+| `GET /funda_updated`   | `reference.get_funda_updated()`  |
+
+### Economic Data Endpoints
+
+| Endpoint               | Method                           |
+| ---------------------- | -------------------------------- |
+| `GET /economic/indicators`| `economic.get_indicators_list()` |
+| `GET /economic/indicator` | `economic.get_indicator()`       |
+| `GET /economic/calendar`  | `economic.get_calendar()`        |
+
+### Personal/Account Endpoints
+
+| Endpoint               | Method                              |
+| ---------------------- | ----------------------------------- |
+| `GET /account/usage`   | `personal.get_api_usage()`          |
+| `GET /user/screeners`  | `personal.get_user_screeners()`     |
+| `GET /user/screener`   | `personal.get_user_screener_results()`|
+
+### ETF Endpoints
+
+| Endpoint                    | Method                       |
+| --------------------------- | ---------------------------- |
+| `GET /etf/list`             | `etfs.get_etf_list()`        |
+| `GET /etf/sector_weighting` | `etfs.get_sector_weighting()`|
 
 ## Installation
 

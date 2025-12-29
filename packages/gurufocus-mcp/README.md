@@ -4,11 +4,11 @@ An MCP (Model Context Protocol) server that exposes GuruFocus financial data to 
 
 ## Features
 
-- **15 Analysis Tools**: Stock summaries, valuations, financials, and more
-- **13 Data Resources**: Direct access to formatted financial data via URI templates
-- **5 Analysis Prompts**: Structured frameworks for investment analysis
+- **50+ Analysis Tools**: Stocks, gurus, insiders, politicians, economic data, and more
+- **Data Resources**: Direct access to formatted financial data via URI templates
 - **Multiple Transports**: stdio (Claude Desktop), HTTP/SSE, WebSocket
 - **Error Handling**: Graceful handling of invalid symbols, rate limits, and API errors
+- **TOON Format**: 30-60% token reduction vs JSON for efficient LLM contexts
 
 ## Requirements
 

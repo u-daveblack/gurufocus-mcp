@@ -23,9 +23,8 @@ A standalone Python client library for the GuruFocus API.
 An MCP server exposing GuruFocus data to AI assistants.
 
 - FastMCP framework with HTTP/SSE transport
-- Resources for data access
-- Tools for analysis workflows
-- Prompts for investment research templates
+- **50+ tools** for stocks, gurus, insiders, politicians, economic data, and more
+- Resources for direct data access
 - **TOON format support** for 30-60% token reduction in LLM contexts
 
 ## Quick Start
