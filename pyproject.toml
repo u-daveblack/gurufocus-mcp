@@ -17,6 +17,8 @@ dev = [
     "ipython>=9.8.0",
     "bumpver>=2023.1129",
     "pre-commit>=4.5.1",
+    "polyfactory>=3.2.0",
+    "hypothesis>=6.148.8",
 ]
 
 [tool.uv.workspace]
