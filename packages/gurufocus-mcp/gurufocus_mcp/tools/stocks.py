@@ -13,6 +13,7 @@ from gurufocus_api.logging import get_logger
 
 from ..context import get_client
 from ..errors import raise_api_error, validate_symbol
+from ..file_output import build_file_response, is_file_output_enabled
 from ..formatting import OutputFormat, format_output
 
 logger = get_logger(__name__)
@@ -282,6 +283,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         Data is organized by fiscal period (most recent first) with both annual
         and quarterly options available.
 
+        When GURUFOCUS_OUTPUT_DIR is configured, this tool writes full data to a file
+        and returns a preview with the file path. This allows you to write Python code
+        that reads the file directly for analysis, avoiding context window limits.
+
         Use this tool when you need to analyze a company's financial performance
         over time, track revenue/earnings trends, or evaluate balance sheet health.
 
@@ -307,6 +312,39 @@ def register_stock_tools(mcp: FastMCP) -> None:
             client = get_client(ctx)
 
             financials = await client.stocks.get_financials(normalized, period_type=period_type)
+
+            # If file output is enabled, write to file and return preview
+            if is_file_output_enabled():
+                periods = financials.periods
+                preview_data = [
+                    p.model_dump(mode="json", exclude_none=True) for p in periods[:3]
+                ]
+
+                response = build_file_response(
+                    data=financials,
+                    category="stocks",
+                    filename=f"{normalized}_financials_{period_type}",
+                    model_name="FinancialStatements",
+                    preview=preview_data,
+                    summary={
+                        "symbol": normalized,
+                        "period_type": period_type,
+                        "currency": financials.currency,
+                        "total_periods": len(periods),
+                        "date_range": {
+                            "newest": periods[0].period if periods else None,
+                            "oldest": periods[-1].period if periods else None,
+                        },
+                    },
+                )
+                logger.debug(
+                    "get_stock_financials_file_output",
+                    symbol=normalized,
+                    file_path=response["file_path"],
+                )
+                return response
+
+            # Standard behavior: return full data
             data = financials.model_dump(mode="json", exclude_none=True)
             logger.debug(
                 "get_stock_financials_success",
@@ -350,6 +388,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
         - Price metrics: 52-week high/low, beta, volatility, returns
         - Dividends: yield, payout ratio, growth rates, years of consecutive growth
 
+        When GURUFOCUS_OUTPUT_DIR is configured, this tool writes full data to a file
+        and returns a preview with the file path. This allows you to write Python code
+        that reads the file directly for analysis, avoiding context window limits.
+
         Use this tool when you need to evaluate a company's financial health,
         compare it to peers, or assess investment quality across multiple dimensions.
 
@@ -370,6 +412,68 @@ def register_stock_tools(mcp: FastMCP) -> None:
             client = get_client(ctx)
 
             keyratios = await client.stocks.get_keyratios(normalized)
+
+            # If file output is enabled, write to file and return preview
+            if is_file_output_enabled():
+                # Build preview with key metrics from each category
+                preview_data: dict[str, Any] = {
+                    "symbol": keyratios.symbol,
+                    "company_name": keyratios.company_name,
+                    "quality_scores": {
+                        "gf_score": keyratios.gf_score,
+                        "piotroski_score": keyratios.piotroski_score,
+                        "financial_strength": keyratios.financial_strength,
+                        "profitability_rank": keyratios.profitability_rank,
+                    },
+                }
+                if keyratios.profitability:
+                    preview_data["profitability"] = {
+                        "roe": keyratios.profitability.roe,
+                        "roic": keyratios.profitability.roic,
+                        "net_margin": keyratios.profitability.net_margin,
+                    }
+                if keyratios.valuation:
+                    preview_data["valuation"] = {
+                        "pe_ratio": keyratios.valuation.pe_ratio,
+                        "pb_ratio": keyratios.valuation.pb_ratio,
+                        "ev_to_ebitda": keyratios.valuation.ev_to_ebitda,
+                    }
+                if keyratios.growth:
+                    preview_data["growth"] = {
+                        "revenue_growth_5y": keyratios.growth.revenue_growth_5y,
+                        "eps_growth_5y": keyratios.growth.eps_growth_5y,
+                    }
+
+                response = build_file_response(
+                    data=keyratios,
+                    category="stocks",
+                    filename=f"{normalized}_keyratios",
+                    model_name="KeyRatios",
+                    preview=preview_data,
+                    summary={
+                        "symbol": normalized,
+                        "company_name": keyratios.company_name,
+                        "currency": keyratios.currency,
+                        "categories": [
+                            "profitability",
+                            "liquidity",
+                            "solvency",
+                            "efficiency",
+                            "growth",
+                            "valuation",
+                            "price",
+                            "dividends",
+                        ],
+                    },
+                )
+                logger.debug(
+                    "get_stock_keyratios_file_output",
+                    symbol=normalized,
+                    file_path=response["file_path"],
+                )
+                return response
+
+            # Standard behavior: return full data
             data = keyratios.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_keyratios_success", symbol=normalized, format=format)
             return format_output(data, format)
@@ -589,6 +693,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
           - volume: Trading volume
           - unadjusted_close: Unadjusted closing price
 
+        When GURUFOCUS_OUTPUT_DIR is configured, this tool writes full data to a file
+        and returns a preview with the file path. This allows you to write Python code
+        that reads the file directly for analysis, avoiding context window limits.
+
         Use this tool when you need historical candlestick/OHLC data for
         technical analysis, charting, or computing price-based indicators.
 
@@ -617,6 +725,45 @@ def register_stock_tools(mcp: FastMCP) -> None:
             ohlc = await client.stocks.get_price_ohlc(
                 normalized, start_date=start_date, end_date=end_date
             )
+
+            # If file output is enabled, write to file and return preview
+            if is_file_output_enabled():
+                bars = ohlc.bars
+                preview_data = [
+                    b.model_dump(mode="json", exclude_none=True) for b in bars[:5]
+                ]
+
+                # Build filename with date range if specified
+                filename_parts = [normalized, "ohlc"]
+                if start_date:
+                    filename_parts.append(start_date)
+                if end_date:
+                    filename_parts.append(end_date)
+                filename = "_".join(filename_parts)
+
+                response = build_file_response(
+                    data=ohlc,
+                    category="stocks",
+                    filename=filename,
+                    model_name="OHLCHistory",
+                    preview=preview_data,
+                    summary={
+                        "symbol": normalized,
+                        "total_bars": len(bars),
+                        "date_range": {
+                            "start": bars[-1].date if bars else None,
+                            "end": bars[0].date if bars else None,
+                        },
+                    },
+                )
+                logger.debug(
+                    "get_stock_price_ohlc_file_output",
+                    symbol=normalized,
+                    file_path=response["file_path"],
+                )
+                return response
+
+            # Standard behavior: return full data
             data = ohlc.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_price_ohlc_success", symbol=normalized, format=format)
             return format_output(data, format)

@@ -24,7 +24,8 @@ An MCP server exposing GuruFocus data to AI assistants.
 
 - FastMCP framework with HTTP/SSE transport
 - **50+ tools** for stocks, gurus, insiders, politicians, economic data, and more
-- Resources for direct data access
+- **Schema resources** exposing JSON schemas for all 123 Pydantic data models
+- **File output mode** for context-efficient handling of large datasets
 - **TOON format support** for 30-60% token reduction in LLM contexts
 
 ## Quick Start
@@ -98,6 +99,23 @@ After adding the configuration, restart Claude Desktop. You should see the GuruF
   }
 }
 ```
+
+### Schema Resources
+
+The MCP server exposes JSON schemas for all data models, enabling AI agents to understand data structures and write correct analysis code:
+
+```python
+# List all available schemas
+schemas = await client.read_resource("gurufocus://schemas")
+
+# Get schema for a specific model
+schema = await client.read_resource("gurufocus://schemas/FinancialStatements")
+
+# Get all schemas in a category
+ratios = await client.read_resource("gurufocus://schemas/category/ratios")
+```
+
+Available categories: `stock_fundamentals`, `ratios`, `price_volume`, `dividends`, `guru_institutional`, `insider`, `operating`, `estimates`, `economic`
 
 ### Output Format (TOON)
 
@@ -184,6 +202,46 @@ Or in Claude Desktop config:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `GURUFOCUS_DEFAULT_OUTPUT_FORMAT` | `toon` | Default format: `toon` (token-efficient) or `json` |
+
+### File Output (Context Optimization)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GURUFOCUS_OUTPUT_DIR` | (not set) | Directory for writing data files. When set, large datasets are written to files instead of returned inline |
+
+When `GURUFOCUS_OUTPUT_DIR` is configured, tools that return large datasets (financials, key ratios, price history) will:
+1. Write full data to JSON files in the output directory
+2. Return a preview (3-5 records) with the file path
+3. Include a schema URI for understanding the data structure
+
+This enables AI agents to write Python code that reads files directly, avoiding context window limits:
+
+```python
+# Example response when GURUFOCUS_OUTPUT_DIR is set
+{
+    "summary": {"symbol": "AAPL", "total_periods": 40, ...},
+    "preview": [{"period": "2024-09", "revenue": 94930, ...}, ...],
+    "file_path": "/data/gurufocus/stocks/AAPL_financials_annual.json",
+    "schema": "gurufocus://schemas/FinancialStatements",
+    "python_hint": "pd.read_json('/data/gurufocus/stocks/AAPL_financials_annual.json')"
+}
+```
+
+**Claude Desktop configuration with file output:**
+
+```json
+{
+  "mcpServers": {
+    "gurufocus": {
+      "command": "gurufocus-mcp",
+      "env": {
+        "GURUFOCUS_API_TOKEN": "your-token-here",
+        "GURUFOCUS_OUTPUT_DIR": "/Users/yourname/data/gurufocus"
+      }
+    }
+  }
+}
+```
 
 ### Logging
 

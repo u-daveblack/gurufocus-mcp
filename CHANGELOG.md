@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### gurufocus-mcp
+
+- **Schema Resources**: New MCP resources exposing Pydantic model JSON schemas for all 123 data models
+  - `gurufocus://schemas` - List all available schemas with categories
+  - `gurufocus://schemas/{model_name}` - Get JSON Schema for a specific model (e.g., `FinancialStatements`, `KeyRatios`)
+  - `gurufocus://schemas/category/{category_name}` - Get all schemas in a category (e.g., `stock_fundamentals`, `ratios`)
+  - Enables AI agents to understand data structure before writing analysis code
+
+- **File Output Mode**: New `GURUFOCUS_OUTPUT_DIR` configuration for context-efficient large dataset handling
+  - When configured, tools write full data to JSON files and return file paths with previews
+  - Allows AI agents to write Python code that reads files directly, avoiding context window limits
+  - Supported tools: `get_stock_financials`, `get_stock_keyratios`, `get_stock_price_ohlc`
+  - File structure: `{output_dir}/stocks/{SYMBOL}_{data_type}.json`
+
+### Changed
+
+#### gurufocus-mcp
+
+- Updated tool docstrings to document file output behavior when `GURUFOCUS_OUTPUT_DIR` is set
+
 ## [v0.5.1] - 2025-12-29
 
 ### Removed

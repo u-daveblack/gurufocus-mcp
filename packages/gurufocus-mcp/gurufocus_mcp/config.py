@@ -84,6 +84,17 @@ class MCPServerSettings(BaseSettings):
         description="Default output format for tool responses: 'toon' for token-efficient, 'json' for standard",
     )
 
+    # File Output (for large datasets)
+    output_dir: str | None = Field(
+        default=None,
+        description=(
+            "Directory for writing data files. When set, tools that return large datasets "
+            "will write full data to files and return file paths instead. This reduces "
+            "context window usage and allows AI agents to write Python code that reads "
+            "files directly. Example: '/data/gurufocus' or '.data/gurufocus'"
+        ),
+    )
+
     # Server Info
     server_name: str = Field(
         default="gurufocus-mcp",
