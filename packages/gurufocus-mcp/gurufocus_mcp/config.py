@@ -85,13 +85,13 @@ class MCPServerSettings(BaseSettings):
     )
 
     # File Output (for large datasets)
-    output_dir: str | None = Field(
-        default=None,
+    output_dir: str = Field(
+        default="~/.gurufocus-mcp/data",
         description=(
-            "Directory for writing data files. When set, tools that return large datasets "
-            "will write full data to files and return file paths instead. This reduces "
-            "context window usage and allows AI agents to write Python code that reads "
-            "files directly. Example: '/data/gurufocus' or '.data/gurufocus'"
+            "Directory for writing data files. Tools that return large datasets "
+            "write full data to JSON files and return MCP ResourceLinks. This reduces "
+            "context window usage and allows AI agents to read files directly. "
+            "Supports ~ expansion. Set to empty string '' to disable file output."
         ),
     )
 

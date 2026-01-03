@@ -11,23 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### gurufocus-mcp
 
-- **Schema Resources**: New MCP resources exposing Pydantic model JSON schemas for all 123 data models
+- **Schema Resources**: MCP resources exposing Pydantic model JSON schemas for all 123 data models
   - `gurufocus://schemas` - List all available schemas with categories
   - `gurufocus://schemas/{model_name}` - Get JSON Schema for a specific model (e.g., `FinancialStatements`, `KeyRatios`)
   - `gurufocus://schemas/category/{category_name}` - Get all schemas in a category (e.g., `stock_fundamentals`, `ratios`)
   - Enables AI agents to understand data structure before writing analysis code
 
-- **File Output Mode**: New `GURUFOCUS_OUTPUT_DIR` configuration for context-efficient large dataset handling
-  - When configured, tools write full data to JSON files and return file paths with previews
-  - Allows AI agents to write Python code that reads files directly, avoiding context window limits
+- **ResourceLink File Output**: Tools now return MCP-compliant ResourceLinks by default for large datasets
+  - Default output directory: `~/.gurufocus-mcp/data` (configurable via `GURUFOCUS_OUTPUT_DIR`)
+  - Tools write full data to JSON files and return preview + ResourceLink with `file://` URI
+  - New `inline` parameter on tools to optionally return full data directly
+  - Follows MCP specification 2025-06-18 for ResourceLink format
   - Supported tools: `get_stock_financials`, `get_stock_keyratios`, `get_stock_price_ohlc`
-  - File structure: `{output_dir}/stocks/{SYMBOL}_{data_type}.json`
+  - Set `GURUFOCUS_OUTPUT_DIR=""` to disable and return inline data by default
 
 ### Changed
 
 #### gurufocus-mcp
 
-- Updated tool docstrings to document file output behavior when `GURUFOCUS_OUTPUT_DIR` is set
+- `get_stock_financials`, `get_stock_keyratios`, `get_stock_price_ohlc` now default to ResourceLink output
+  - Add `inline=True` parameter to get full data inline (previous behavior)
+  - Response includes `resource_link` (MCP-compliant), `schema_uri`, `preview`, and `summary`
 
 ## [v0.5.1] - 2025-12-29
 

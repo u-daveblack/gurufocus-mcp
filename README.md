@@ -207,40 +207,35 @@ Or in Claude Desktop config:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GURUFOCUS_OUTPUT_DIR` | (not set) | Directory for writing data files. When set, large datasets are written to files instead of returned inline |
+| `GURUFOCUS_OUTPUT_DIR` | `~/.gurufocus-mcp/data` | Directory for data files. Set to empty string `''` to disable |
 
-When `GURUFOCUS_OUTPUT_DIR` is configured, tools that return large datasets (financials, key ratios, price history) will:
-1. Write full data to JSON files in the output directory
-2. Return a preview (3-5 records) with the file path
-3. Include a schema URI for understanding the data structure
+By default, tools that return large datasets write full data to JSON files and return an MCP-compliant ResourceLink. This reduces context window usage and allows AI agents to read files directly.
 
-This enables AI agents to write Python code that reads files directly, avoiding context window limits:
+**Response format (default, inline=False):**
 
 ```python
-# Example response when GURUFOCUS_OUTPUT_DIR is set
 {
     "summary": {"symbol": "AAPL", "total_periods": 40, ...},
     "preview": [{"period": "2024-09", "revenue": 94930, ...}, ...],
-    "file_path": "/data/gurufocus/stocks/AAPL_financials_annual.json",
-    "schema": "gurufocus://schemas/FinancialStatements",
-    "python_hint": "pd.read_json('/data/gurufocus/stocks/AAPL_financials_annual.json')"
+    "resource_link": {
+        "type": "resource_link",
+        "uri": "file:///Users/you/.gurufocus-mcp/data/stocks/AAPL_financials_annual.json",
+        "name": "AAPL_financials_annual.json",
+        "mimeType": "application/json"
+    },
+    "schema_uri": "gurufocus://schemas/FinancialStatements"
 }
 ```
 
-**Claude Desktop configuration with file output:**
+**Tools with ResourceLink support:**
+- `get_stock_financials` - Set `inline=True` for inline data
+- `get_stock_keyratios` - Set `inline=True` for inline data
+- `get_stock_price_ohlc` - Set `inline=True` for inline data
 
-```json
-{
-  "mcpServers": {
-    "gurufocus": {
-      "command": "gurufocus-mcp",
-      "env": {
-        "GURUFOCUS_API_TOKEN": "your-token-here",
-        "GURUFOCUS_OUTPUT_DIR": "/Users/yourname/data/gurufocus"
-      }
-    }
-  }
-}
+**Disable file output:**
+
+```bash
+export GURUFOCUS_OUTPUT_DIR=""  # Returns full data inline
 ```
 
 ### Logging

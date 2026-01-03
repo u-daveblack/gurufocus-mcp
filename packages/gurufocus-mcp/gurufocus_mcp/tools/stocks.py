@@ -262,11 +262,21 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 description="Financial period type: 'annual' for yearly data or 'quarterly' for quarterly data",
             ),
         ] = "annual",
+        inline: Annotated[
+            bool,
+            Field(
+                default=False,
+                description=(
+                    "If False (default), returns a preview with a ResourceLink to the full "
+                    "data file. If True, returns the complete data inline (uses more context)."
+                ),
+            ),
+        ] = False,
         format: Annotated[
             OutputFormat,
             Field(
                 default="toon",
-                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+                description="Output format for inline data: 'toon' (token-efficient) or 'json'",
             ),
         ] = "toon",
         ctx: Context = None,  # type: ignore[assignment]
@@ -283,16 +293,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
         Data is organized by fiscal period (most recent first) with both annual
         and quarterly options available.
 
-        When GURUFOCUS_OUTPUT_DIR is configured, this tool writes full data to a file
-        and returns a preview with the file path. This allows you to write Python code
-        that reads the file directly for analysis, avoiding context window limits.
+        By default (inline=False), this tool writes full data to a file and returns:
+        - summary: Metadata about the data
+        - preview: First 3 periods for quick analysis
+        - resource_link: MCP ResourceLink with file:// URI to the complete data
+        - schema_uri: URI to fetch the JSON schema for the data model
+
+        Set inline=True to return all data directly (useful for small requests or debugging).
 
         Use this tool when you need to analyze a company's financial performance
         over time, track revenue/earnings trends, or evaluate balance sheet health.
-
-        The 'format' parameter controls output encoding:
-        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
-        - 'json': Standard JSON format for debugging or compatibility
         """
         normalized = validate_symbol(symbol)
         if not normalized:
@@ -305,6 +315,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
             "get_stock_financials_called",
             symbol=normalized,
             period_type=period_type,
+            inline=inline,
             format=format,
         )
 
@@ -313,12 +324,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
 
             financials = await client.stocks.get_financials(normalized, period_type=period_type)
 
-            # If file output is enabled, write to file and return preview
-            if is_file_output_enabled():
+            # Return ResourceLink unless inline=True or file output is disabled
+            if not inline and is_file_output_enabled():
                 periods = financials.periods
-                preview_data = [
-                    p.model_dump(mode="json", exclude_none=True) for p in periods[:3]
-                ]
+                preview_data = [p.model_dump(mode="json", exclude_none=True) for p in periods[:3]]
 
                 response = build_file_response(
                     data=financials,
@@ -340,14 +349,14 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 logger.debug(
                     "get_stock_financials_file_output",
                     symbol=normalized,
-                    file_path=response["file_path"],
+                    file_path=response["resource_link"]["uri"],
                 )
                 return response
 
-            # Standard behavior: return full data
+            # Inline mode: return full data directly
             data = financials.model_dump(mode="json", exclude_none=True)
             logger.debug(
-                "get_stock_financials_success",
+                "get_stock_financials_inline",
                 symbol=normalized,
                 period_type=period_type,
                 format=format,
@@ -366,11 +375,21 @@ def register_stock_tools(mcp: FastMCP) -> None:
             str,
             Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
         ],
+        inline: Annotated[
+            bool,
+            Field(
+                default=False,
+                description=(
+                    "If False (default), returns a preview with a ResourceLink to the full "
+                    "data file. If True, returns the complete data inline (uses more context)."
+                ),
+            ),
+        ] = False,
         format: Annotated[
             OutputFormat,
             Field(
                 default="toon",
-                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+                description="Output format for inline data: 'toon' (token-efficient) or 'json'",
             ),
         ] = "toon",
         ctx: Context = None,  # type: ignore[assignment]
@@ -388,16 +407,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
         - Price metrics: 52-week high/low, beta, volatility, returns
         - Dividends: yield, payout ratio, growth rates, years of consecutive growth
 
-        When GURUFOCUS_OUTPUT_DIR is configured, this tool writes full data to a file
-        and returns a preview with the file path. This allows you to write Python code
-        that reads the file directly for analysis, avoiding context window limits.
+        By default (inline=False), this tool writes full data to a file and returns:
+        - summary: Metadata about the data
+        - preview: Key metrics from each category for quick analysis
+        - resource_link: MCP ResourceLink with file:// URI to the complete data
+        - schema_uri: URI to fetch the JSON schema for the data model
+
+        Set inline=True to return all data directly (useful for small requests or debugging).
 
         Use this tool when you need to evaluate a company's financial health,
         compare it to peers, or assess investment quality across multiple dimensions.
-
-        The 'format' parameter controls output encoding:
-        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
-        - 'json': Standard JSON format for debugging or compatibility
         """
         normalized = validate_symbol(symbol)
         if not normalized:
@@ -406,15 +425,15 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
             )
 
-        logger.debug("get_stock_keyratios_called", symbol=normalized, format=format)
+        logger.debug("get_stock_keyratios_called", symbol=normalized, inline=inline, format=format)
 
         try:
             client = get_client(ctx)
 
             keyratios = await client.stocks.get_keyratios(normalized)
 
-            # If file output is enabled, write to file and return preview
-            if is_file_output_enabled():
+            # Return ResourceLink unless inline=True or file output is disabled
+            if not inline and is_file_output_enabled():
                 # Build preview with key metrics from each category
                 preview_data: dict[str, Any] = {
                     "symbol": keyratios.symbol,
@@ -469,13 +488,13 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 logger.debug(
                     "get_stock_keyratios_file_output",
                     symbol=normalized,
-                    file_path=response["file_path"],
+                    file_path=response["resource_link"]["uri"],
                 )
                 return response
 
-            # Standard behavior: return full data
+            # Inline mode: return full data directly
             data = keyratios.model_dump(mode="json", exclude_none=True)
-            logger.debug("get_stock_keyratios_success", symbol=normalized, format=format)
+            logger.debug("get_stock_keyratios_inline", symbol=normalized, format=format)
             return format_output(data, format)
 
         except ToolError:
@@ -672,11 +691,21 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 description="End date in YYYYMMDD format (e.g., 20251231). If not provided, returns up to current date.",
             ),
         ] = None,
+        inline: Annotated[
+            bool,
+            Field(
+                default=False,
+                description=(
+                    "If False (default), returns a preview with a ResourceLink to the full "
+                    "data file. If True, returns the complete data inline (uses more context)."
+                ),
+            ),
+        ] = False,
         format: Annotated[
             OutputFormat,
             Field(
                 default="toon",
-                description="Output format: 'toon' (default, token-efficient) or 'json' (standard)",
+                description="Output format for inline data: 'toon' (token-efficient) or 'json'",
             ),
         ] = "toon",
         ctx: Context = None,  # type: ignore[assignment]
@@ -693,16 +722,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
           - volume: Trading volume
           - unadjusted_close: Unadjusted closing price
 
-        When GURUFOCUS_OUTPUT_DIR is configured, this tool writes full data to a file
-        and returns a preview with the file path. This allows you to write Python code
-        that reads the file directly for analysis, avoiding context window limits.
+        By default (inline=False), this tool writes full data to a file and returns:
+        - summary: Metadata about the data
+        - preview: First 5 price bars for quick analysis
+        - resource_link: MCP ResourceLink with file:// URI to the complete data
+        - schema_uri: URI to fetch the JSON schema for the data model
+
+        Set inline=True to return all data directly (useful for small date ranges or debugging).
 
         Use this tool when you need historical candlestick/OHLC data for
         technical analysis, charting, or computing price-based indicators.
-
-        The 'format' parameter controls output encoding:
-        - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
-        - 'json': Standard JSON format for debugging or compatibility
         """
         normalized = validate_symbol(symbol)
         if not normalized:
@@ -716,6 +745,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
             symbol=normalized,
             start_date=start_date,
             end_date=end_date,
+            inline=inline,
             format=format,
         )
 
@@ -726,12 +756,10 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 normalized, start_date=start_date, end_date=end_date
             )
 
-            # If file output is enabled, write to file and return preview
-            if is_file_output_enabled():
+            # Return ResourceLink unless inline=True or file output is disabled
+            if not inline and is_file_output_enabled():
                 bars = ohlc.bars
-                preview_data = [
-                    b.model_dump(mode="json", exclude_none=True) for b in bars[:5]
-                ]
+                preview_data = [b.model_dump(mode="json", exclude_none=True) for b in bars[:5]]
 
                 # Build filename with date range if specified
                 filename_parts = [normalized, "ohlc"]
@@ -759,13 +787,13 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 logger.debug(
                     "get_stock_price_ohlc_file_output",
                     symbol=normalized,
-                    file_path=response["file_path"],
+                    file_path=response["resource_link"]["uri"],
                 )
                 return response
 
-            # Standard behavior: return full data
+            # Inline mode: return full data directly
             data = ohlc.model_dump(mode="json", exclude_none=True)
-            logger.debug("get_stock_price_ohlc_success", symbol=normalized, format=format)
+            logger.debug("get_stock_price_ohlc_inline", symbol=normalized, format=format)
             return format_output(data, format)
 
         except ToolError:

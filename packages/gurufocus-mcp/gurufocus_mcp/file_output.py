@@ -17,14 +17,17 @@ from .config import get_settings
 def get_output_dir() -> Path | None:
     """Get configured output directory, creating it if needed.
 
+    Handles ~ expansion for home directory paths.
+
     Returns:
-        Path to output directory, or None if not configured.
+        Path to output directory, or None if disabled (empty string).
     """
     settings = get_settings()
-    if not settings.output_dir:
+    if not settings.output_dir or not settings.output_dir.strip():
         return None
 
-    output_dir = Path(settings.output_dir)
+    # Expand ~ to user's home directory
+    output_dir = Path(settings.output_dir).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir
 
@@ -73,13 +76,15 @@ def build_file_response(
     preview: list[dict[str, Any]] | dict[str, Any],
     summary: dict[str, Any],
 ) -> dict[str, Any]:
-    """Build a response with file path and preview data.
+    """Build an MCP-spec-compliant response with ResourceLink.
 
-    This is the standard response format when output_dir is configured:
+    Returns a response containing:
     - summary: Key metadata about the data
-    - preview: Sample of the data for context
-    - file_path: Where the full data was written
-    - schema: URI to fetch the JSON schema
+    - preview: Sample of the data for immediate context
+    - resource_link: MCP-compliant ResourceLink pointing to the full data file
+
+    The resource_link follows the MCP specification (2025-06-18):
+    https://modelcontextprotocol.io/specification/2025-06-18/server/tools#resource-links
 
     Args:
         data: Full data to write to file
@@ -90,7 +95,7 @@ def build_file_response(
         summary: Summary metadata dict
 
     Returns:
-        Response dict with file_path and preview
+        Response dict with MCP-compliant resource_link
     """
     file_path = write_data_file(data, category, filename)
 
@@ -98,12 +103,25 @@ def build_file_response(
         # output_dir not configured - should not happen if caller checks
         raise RuntimeError("output_dir not configured")
 
+    # Build MCP-spec-compliant ResourceLink
+    # See: https://modelcontextprotocol.io/specification/2025-06-18/server/tools#resource-links
+    resource_link = {
+        "type": "resource_link",
+        "uri": f"file://{file_path}",
+        "name": f"{filename}.json",
+        "description": f"Full {model_name} data. Read schema at gurufocus://schemas/{model_name}",
+        "mimeType": "application/json",
+        "annotations": {
+            "audience": ["assistant"],
+            "priority": 0.8,
+        },
+    }
+
     return {
         "summary": summary,
         "preview": preview,
-        "file_path": file_path,
-        "schema": f"gurufocus://schemas/{model_name}",
-        "python_hint": f"import pandas as pd; df = pd.read_json('{file_path}')",
+        "resource_link": resource_link,
+        "schema_uri": f"gurufocus://schemas/{model_name}",
     }
 
 
