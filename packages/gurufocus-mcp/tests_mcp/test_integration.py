@@ -39,10 +39,10 @@ class TestMCPProtocolCompliance:
 
     @pytest.mark.asyncio
     async def test_list_tools_returns_all_stock_tools(self, client: Client) -> None:
-        """Test that list_tools returns all stock tools (51 = 53 minus 2 disabled portfolio tools)."""
+        """Test that list_tools returns all tools (54 = 53 minus 2 disabled portfolio tools + 3 schema tools)."""
         tools = await client.list_tools()
 
-        assert len(tools) == 51
+        assert len(tools) == 54
         tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
         assert "get_etf_list" in tool_names

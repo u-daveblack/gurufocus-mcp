@@ -211,14 +211,22 @@ gurufocus://guru/{guru_id}/trades       - Guru's recent trades
 gurufocus://stock/{symbol}/gurus        - Gurus holding a stock
 ```
 
-### Schema Resources
+### Schema Discovery
 
-Schema resources help AI agents understand data structures to write correct JMESPath queries:
+Schema tools help AI agents understand data structures to write correct JMESPath queries:
+
+```
+list_schemas()                          - List all available model schemas with categories
+get_schema(model_name)                  - Get JSON schema for a specific model
+get_schemas_by_category(category)       - Get schemas by category (e.g., ratios, dividends)
+```
+
+Schema resources are also available (but tools are preferred as Claude Desktop doesn't fully support resource templates):
 
 ```
 gurufocus://schemas                     - List all available model schemas
 gurufocus://schemas/{model_name}        - Get JSON schema for a specific model
-gurufocus://schemas/category/{category} - Get schemas by category (e.g., ratios, dividends)
+gurufocus://schemas/category/{category} - Get schemas by category
 ```
 
 ## JMESPath Query Support

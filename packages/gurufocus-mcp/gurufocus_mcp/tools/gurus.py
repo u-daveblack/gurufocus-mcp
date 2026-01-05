@@ -49,7 +49,7 @@ def register_guru_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get list of all tracked institutional gurus (Super Investors).
 
-        Schema: gurufocus://schemas/GuruList
+        Schema: Call get_schema("GuruList") to see the full schema.
 
         Returns a comprehensive list of tracked institutional investors:
         - us_gurus: US institutional gurus (13F filers)
@@ -69,7 +69,7 @@ def register_guru_tools(mcp: FastMCP) -> None:
         Note: This is a large dataset (~2.6MB) - cache is recommended.
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
@@ -141,7 +141,7 @@ def register_guru_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get a guru's stock picks and trading activity.
 
-        Schema: gurufocus://schemas/GuruPicks
+        Schema: Call get_schema("GuruPicks") to see the full schema.
 
         Returns the guru's stock picks with detailed transaction info:
         - guru_id: Guru identifier
@@ -163,7 +163,7 @@ def register_guru_tools(mcp: FastMCP) -> None:
         Common guru IDs: 7 (Warren Buffett/Berkshire), 4 (Bill Ackman).
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts

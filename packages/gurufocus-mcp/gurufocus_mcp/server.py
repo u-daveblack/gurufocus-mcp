@@ -23,6 +23,7 @@ from .tools import (
     register_personal_tools,
     register_politician_tools,
     register_reference_tools,
+    register_schema_tools,
     register_stock_tools,
 )
 
@@ -102,6 +103,7 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
     register_economic_tools(mcp)
     register_etf_tools(mcp)
     register_personal_tools(mcp)
+    register_schema_tools(mcp)
     register_stock_resources(mcp)
     register_schema_resources(mcp)
 

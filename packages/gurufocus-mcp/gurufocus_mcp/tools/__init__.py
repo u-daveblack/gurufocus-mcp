@@ -11,6 +11,7 @@ from .insiders import register_insider_tools
 from .personal import register_personal_tools
 from .politicians import register_politician_tools
 from .reference import register_reference_tools
+from .schemas import register_schema_tools
 from .stocks import register_stock_tools
 
 __all__ = [
@@ -22,5 +23,6 @@ __all__ = [
     "register_personal_tools",
     "register_politician_tools",
     "register_reference_tools",
+    "register_schema_tools",
     "register_stock_tools",
 ]

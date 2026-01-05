@@ -53,7 +53,7 @@ def register_insider_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get recent insider transaction updates.
 
-        Schema: gurufocus://schemas/InsiderUpdatesResponse
+        Schema: Call get_schema("InsiderUpdatesResponse") to see the full schema.
 
         Returns a list of recent insider transactions filed with the SEC:
         - symbol: Stock ticker
@@ -69,7 +69,7 @@ def register_insider_tools(mcp: FastMCP) -> None:
         across all stocks. High insider buying can be a bullish signal.
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts

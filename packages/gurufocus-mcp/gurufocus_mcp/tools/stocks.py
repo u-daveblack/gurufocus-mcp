@@ -164,7 +164,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get dividend history for a stock.
 
-        Schema: gurufocus://schemas/DividendHistory
+        Schema: Call get_schema("DividendHistory") to see the full schema.
 
         Returns historical dividend payment data:
         - payments: Array of historical dividend payments
@@ -179,7 +179,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
         track payout trends, or evaluate income potential.
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
@@ -310,7 +310,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get financial statements for a stock.
 
-        Schema: gurufocus://schemas/FinancialStatements
+        Schema: Call get_schema("FinancialStatements") to see the full schema.
 
         Returns historical financial data including:
         - Per-share metrics: revenue per share, EPS, book value per share, FCF per share
@@ -326,7 +326,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
         over time, track revenue/earnings trends, or evaluate balance sheet health.
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
@@ -405,7 +405,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get key financial ratios for a stock.
 
-        Schema: gurufocus://schemas/KeyRatios
+        Schema: Call get_schema("KeyRatios") to see the full schema.
 
         Returns comprehensive financial ratios organized by category:
         - Quality scores: Piotroski F-Score, Altman Z-Score, GF Score, financial strength
@@ -422,7 +422,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
         compare it to peers, or assess investment quality across multiple dimensions.
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
@@ -672,7 +672,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get OHLC (Open-High-Low-Close) price history for a stock.
 
-        Schema: gurufocus://schemas/OHLCHistory
+        Schema: Call get_schema("OHLCHistory") to see the full schema.
 
         Returns daily OHLC price bars with volume data:
         - bars: Array of daily price bars
@@ -688,7 +688,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
         technical analysis, charting, or computing price-based indicators.
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
@@ -1039,7 +1039,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get ownership breakdown for a stock.
 
-        Schema: gurufocus://schemas/StockOwnership
+        Schema: Call get_schema("StockOwnership") to see the full schema.
 
         Returns current ownership structure including:
         - Shares outstanding
@@ -1050,7 +1050,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
         Use this tool to understand who owns the stock and ownership distribution.
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
         """
         normalized = validate_symbol(symbol)
         if not normalized:
@@ -1157,7 +1157,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get list of available stock indicators.
 
-        Schema: gurufocus://schemas/IndicatorsList
+        Schema: Call get_schema("IndicatorsList") to see the full schema.
 
         Returns all 240+ available indicators that can be queried for individual stocks.
         Each indicator has:
@@ -1168,7 +1168,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
         querying specific indicator values with get_stock_indicator.
 
         Use the 'query' parameter with a JMESPath expression to filter the response.
-        Read the schema resource first to understand the data structure.
+        Call get_schema() first to understand the data structure.
         """
         logger.debug("get_stock_indicators_called", query=query, format=format)
 
