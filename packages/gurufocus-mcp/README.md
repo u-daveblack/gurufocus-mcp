@@ -4,7 +4,7 @@ An MCP (Model Context Protocol) server that exposes GuruFocus financial data to 
 
 ## Features
 
-- **50+ Analysis Tools**: Stocks, gurus, insiders, politicians, economic data, and more
+- **54 Analysis Tools**: Stocks, gurus, insiders, politicians, economic data, and more
 - **Data Resources**: Direct access to formatted financial data via URI templates
 - **JMESPath Query Support**: Filter and transform responses inline to reduce context usage
 - **Schema Resources**: AI agents can discover data structures to write correct queries
@@ -184,6 +184,14 @@ After adding the configuration, restart Claude Desktop. You should see the GuruF
 | --------------------- | ----------------------------------------- |
 | `compare_stocks`      | Compare multiple stocks side-by-side      |
 | `get_stock_news`      | Recent news for a stock                   |
+
+### Schema Tools (3 tools)
+
+| Tool                       | Description                                    |
+| -------------------------- | ---------------------------------------------- |
+| `list_schemas`             | List all available model schemas with categories |
+| `get_schema`               | Get JSON schema for a specific model           |
+| `get_schemas_by_category`  | Get all schemas in a category                  |
 
 ## Available Resources
 
@@ -379,7 +387,7 @@ gurufocus_mcp/
 ├── config.py            # Configuration management
 ├── server.py            # MCP server setup
 ├── formatting.py        # TOON/JSON formatters
-├── tools/               # Tool handlers (50+ tools)
+├── tools/               # Tool handlers (54 tools)
 │   ├── stocks.py        # Stock data tools
 │   ├── insiders.py      # Insider activity tools
 │   ├── gurus.py         # Guru/institutional investor tools
@@ -387,7 +395,8 @@ gurufocus_mcp/
 │   ├── economic.py      # Economic data tools
 │   ├── reference.py     # Reference data tools
 │   ├── personal.py      # Account/portfolio tools
-│   └── etfs.py          # ETF tools
+│   ├── etfs.py          # ETF tools
+│   └── schemas.py       # Schema discovery tools
 └── resources/           # Resource handlers
 ```
 
