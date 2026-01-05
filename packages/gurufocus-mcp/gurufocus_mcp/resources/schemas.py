@@ -307,8 +307,7 @@ def register_schema_resources(mcp: FastMCP) -> None:
         if category_name not in SCHEMA_CATEGORIES:
             available = sorted(SCHEMA_CATEGORIES.keys())
             raise ValueError(
-                f"Unknown category: '{category_name}'. "
-                f"Available categories: {', '.join(available)}"
+                f"Unknown category: '{category_name}'. Available categories: {', '.join(available)}"
             )
 
         model_names = SCHEMA_CATEGORIES[category_name]
