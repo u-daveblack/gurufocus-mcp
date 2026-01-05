@@ -52,25 +52,27 @@ class TestServerResources:
 
         assert hasattr(server, "_resource_manager")
 
-    def test_server_no_resource_templates(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Test that server has no resource templates (summary is now a tool)."""
+    def test_server_has_schema_templates(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Test that server has schema resource templates."""
         monkeypatch.setenv("GURUFOCUS_API_TOKEN", "test-token")
 
         settings = MCPServerSettings(api_token="test-token")
         server = create_server(settings)
 
         template_count = len(server._resource_manager._templates)
-        assert template_count == 0
+        # 2 templates: get_schema, get_category_schemas
+        assert template_count == 2
 
-    def test_server_no_static_resources(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Test that server has no static resources."""
+    def test_server_has_schema_resources(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Test that server has schema static resources."""
         monkeypatch.setenv("GURUFOCUS_API_TOKEN", "test-token")
 
         settings = MCPServerSettings(api_token="test-token")
         server = create_server(settings)
 
         resource_count = len(server._resource_manager._resources)
-        assert resource_count == 0
+        # 1 static resource: list_all_schemas
+        assert resource_count == 1
 
     def test_server_has_get_stock_summary_tool(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that server has get_stock_summary tool registered."""

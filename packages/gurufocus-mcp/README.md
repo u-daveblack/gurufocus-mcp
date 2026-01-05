@@ -6,6 +6,8 @@ An MCP (Model Context Protocol) server that exposes GuruFocus financial data to 
 
 - **50+ Analysis Tools**: Stocks, gurus, insiders, politicians, economic data, and more
 - **Data Resources**: Direct access to formatted financial data via URI templates
+- **JMESPath Query Support**: Filter and transform responses inline to reduce context usage
+- **Schema Resources**: AI agents can discover data structures to write correct queries
 - **Multiple Transports**: stdio (Claude Desktop), HTTP/SSE, WebSocket
 - **Error Handling**: Graceful handling of invalid symbols, rate limits, and API errors
 - **TOON Format**: 30-60% token reduction vs JSON for efficient LLM contexts
@@ -208,6 +210,38 @@ gurufocus://guru/{guru_id}/picks        - Guru's portfolio
 gurufocus://guru/{guru_id}/trades       - Guru's recent trades
 gurufocus://stock/{symbol}/gurus        - Gurus holding a stock
 ```
+
+### Schema Resources
+
+Schema resources help AI agents understand data structures to write correct JMESPath queries:
+
+```
+gurufocus://schemas                     - List all available model schemas
+gurufocus://schemas/{model_name}        - Get JSON schema for a specific model
+gurufocus://schemas/category/{category} - Get schemas by category (e.g., ratios, dividends)
+```
+
+## JMESPath Query Support
+
+Tools that return large datasets support JMESPath queries to filter and transform data inline:
+
+```python
+# Get only the last 5 financial periods
+get_stock_financials(symbol="AAPL", query="periods[:5]")
+
+# Extract just revenue and profit from each period
+get_stock_financials(symbol="AAPL", query="periods[*].{period: period, revenue: revenue, profit: net_income}")
+
+# Get dividend amounts only
+get_stock_dividend(symbol="AAPL", query="payments[*].amount")
+
+# Filter insider updates to purchases only
+get_insider_updates(query="updates[?type=='P']")
+```
+
+JMESPath is the same query language used by AWS CLI. See [jmespath.org](https://jmespath.org/tutorial.html) for more examples.
+
+**Tools with query support:** `get_stock_dividend`, `get_stock_financials`, `get_stock_keyratios`, `get_stock_price_ohlc`, `get_stock_ownership`, `get_stock_indicators`, `get_gurulist`, `get_guru_picks`, `get_insider_updates`
 
 ## Example Conversations
 

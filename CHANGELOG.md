@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### gurufocus-mcp
+- JMESPath query support for filtering and transforming tool responses
+  - New `query` parameter on tools that return large/complex datasets
+  - Allows filtering arrays, projecting fields, and transforming data inline
+  - Query results support both TOON and JSON output formats
+  - Examples: `query='periods[:5]'` (recent 5), `query='payments[*].amount'` (just amounts)
+- Schema resources for AI agents to understand data structures
+  - `gurufocus://schemas` - List all available model schemas
+  - `gurufocus://schemas/{model_name}` - Get JSON schema for a specific model
+  - `gurufocus://schemas/category/{category_name}` - Get schemas by category
+  - Enables AI agents to write correct JMESPath queries
+
 ## [v0.5.1] - 2025-12-29
 
 ### Removed

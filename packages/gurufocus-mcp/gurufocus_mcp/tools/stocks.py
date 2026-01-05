@@ -14,6 +14,7 @@ from gurufocus_api.logging import get_logger
 from ..context import get_client
 from ..errors import raise_api_error, validate_symbol
 from ..formatting import OutputFormat, format_output
+from ..query import apply_query
 
 logger = get_logger(__name__)
 
@@ -142,6 +143,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
             str,
             Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
         ],
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'payments[:5]' (recent 5), 'payments[*].amount' (just amounts)"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -152,6 +163,8 @@ def register_stock_tools(mcp: FastMCP) -> None:
         ctx: Context = None,  # type: ignore[assignment]
     ) -> str | dict[str, Any]:
         """Get dividend history for a stock.
+
+        Schema: gurufocus://schemas/DividendHistory
 
         Returns historical dividend payment data:
         - payments: Array of historical dividend payments
@@ -165,6 +178,9 @@ def register_stock_tools(mcp: FastMCP) -> None:
         Use this tool when you need to analyze a stock's dividend history,
         track payout trends, or evaluate income potential.
 
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Read the schema resource first to understand the data structure.
+
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
         - 'json': Standard JSON format for debugging or compatibility
@@ -176,12 +192,24 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
             )
 
-        logger.debug("get_stock_dividend_called", symbol=normalized, format=format)
+        logger.debug("get_stock_dividend_called", symbol=normalized, query=query, format=format)
 
         try:
             client = get_client(ctx)
 
             dividends = await client.stocks.get_dividends(normalized)
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(dividends, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = dividends.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_dividend_success", symbol=normalized, format=format)
             return format_output(data, format)
@@ -261,6 +289,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 description="Financial period type: 'annual' for yearly data or 'quarterly' for quarterly data",
             ),
         ] = "annual",
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'periods[:5]' (recent 5), 'periods[*].{period: period, revenue: revenue}'"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -271,6 +309,8 @@ def register_stock_tools(mcp: FastMCP) -> None:
         ctx: Context = None,  # type: ignore[assignment]
     ) -> str | dict[str, Any]:
         """Get financial statements for a stock.
+
+        Schema: gurufocus://schemas/FinancialStatements
 
         Returns historical financial data including:
         - Per-share metrics: revenue per share, EPS, book value per share, FCF per share
@@ -284,6 +324,9 @@ def register_stock_tools(mcp: FastMCP) -> None:
 
         Use this tool when you need to analyze a company's financial performance
         over time, track revenue/earnings trends, or evaluate balance sheet health.
+
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Read the schema resource first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
@@ -300,6 +343,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
             "get_stock_financials_called",
             symbol=normalized,
             period_type=period_type,
+            query=query,
             format=format,
         )
 
@@ -307,6 +351,18 @@ def register_stock_tools(mcp: FastMCP) -> None:
             client = get_client(ctx)
 
             financials = await client.stocks.get_financials(normalized, period_type=period_type)
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(financials, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = financials.model_dump(mode="json", exclude_none=True)
             logger.debug(
                 "get_stock_financials_success",
@@ -328,6 +384,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
             str,
             Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
         ],
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'profitability' (just profitability), 'valuation' (just valuation)"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -338,6 +404,8 @@ def register_stock_tools(mcp: FastMCP) -> None:
         ctx: Context = None,  # type: ignore[assignment]
     ) -> str | dict[str, Any]:
         """Get key financial ratios for a stock.
+
+        Schema: gurufocus://schemas/KeyRatios
 
         Returns comprehensive financial ratios organized by category:
         - Quality scores: Piotroski F-Score, Altman Z-Score, GF Score, financial strength
@@ -353,6 +421,9 @@ def register_stock_tools(mcp: FastMCP) -> None:
         Use this tool when you need to evaluate a company's financial health,
         compare it to peers, or assess investment quality across multiple dimensions.
 
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Read the schema resource first to understand the data structure.
+
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
         - 'json': Standard JSON format for debugging or compatibility
@@ -364,12 +435,24 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
             )
 
-        logger.debug("get_stock_keyratios_called", symbol=normalized, format=format)
+        logger.debug("get_stock_keyratios_called", symbol=normalized, query=query, format=format)
 
         try:
             client = get_client(ctx)
 
             keyratios = await client.stocks.get_keyratios(normalized)
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(keyratios, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = keyratios.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_keyratios_success", symbol=normalized, format=format)
             return format_output(data, format)
@@ -568,6 +651,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 description="End date in YYYYMMDD format (e.g., 20251231). If not provided, returns up to current date.",
             ),
         ] = None,
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'bars[:5]' (recent 5), 'bars[*].{date: date, close: close}'"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -578,6 +671,8 @@ def register_stock_tools(mcp: FastMCP) -> None:
         ctx: Context = None,  # type: ignore[assignment]
     ) -> str | dict[str, Any]:
         """Get OHLC (Open-High-Low-Close) price history for a stock.
+
+        Schema: gurufocus://schemas/OHLCHistory
 
         Returns daily OHLC price bars with volume data:
         - bars: Array of daily price bars
@@ -591,6 +686,9 @@ def register_stock_tools(mcp: FastMCP) -> None:
 
         Use this tool when you need historical candlestick/OHLC data for
         technical analysis, charting, or computing price-based indicators.
+
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Read the schema resource first to understand the data structure.
 
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
@@ -608,6 +706,7 @@ def register_stock_tools(mcp: FastMCP) -> None:
             symbol=normalized,
             start_date=start_date,
             end_date=end_date,
+            query=query,
             format=format,
         )
 
@@ -617,6 +716,18 @@ def register_stock_tools(mcp: FastMCP) -> None:
             ohlc = await client.stocks.get_price_ohlc(
                 normalized, start_date=start_date, end_date=end_date
             )
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(ohlc, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = ohlc.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_price_ohlc_success", symbol=normalized, format=format)
             return format_output(data, format)
@@ -907,6 +1018,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
             str,
             Field(description="Stock ticker symbol (e.g., AAPL, MSFT, GOOGL)"),
         ],
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'institutional' (just institutional), 'insider' (just insider)"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -918,6 +1039,8 @@ def register_stock_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get ownership breakdown for a stock.
 
+        Schema: gurufocus://schemas/StockOwnership
+
         Returns current ownership structure including:
         - Shares outstanding
         - Institutional ownership percentage and shares
@@ -925,6 +1048,9 @@ def register_stock_tools(mcp: FastMCP) -> None:
         - Float percentage
 
         Use this tool to understand who owns the stock and ownership distribution.
+
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Read the schema resource first to understand the data structure.
         """
         normalized = validate_symbol(symbol)
         if not normalized:
@@ -933,12 +1059,24 @@ def register_stock_tools(mcp: FastMCP) -> None:
                 "Please provide a valid stock ticker symbol (e.g., AAPL, MSFT)."
             )
 
-        logger.debug("get_stock_ownership_called", symbol=normalized, format=format)
+        logger.debug("get_stock_ownership_called", symbol=normalized, query=query, format=format)
 
         try:
             client = get_client(ctx)
 
             ownership = await client.stocks.get_ownership(normalized)
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(ownership, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = ownership.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_ownership_success", symbol=normalized, format=format)
             return format_output(data, format)
@@ -998,6 +1136,16 @@ def register_stock_tools(mcp: FastMCP) -> None:
 
     @mcp.tool
     async def get_stock_indicators(
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'indicators[:10]' (first 10), 'indicators[*].key' (just keys)"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -1009,6 +1157,8 @@ def register_stock_tools(mcp: FastMCP) -> None:
     ) -> str | dict[str, Any]:
         """Get list of available stock indicators.
 
+        Schema: gurufocus://schemas/IndicatorsList
+
         Returns all 240+ available indicators that can be queried for individual stocks.
         Each indicator has:
         - key: The indicator key for API calls (e.g., 'net_income', 'roe')
@@ -1016,13 +1166,28 @@ def register_stock_tools(mcp: FastMCP) -> None:
 
         Use this tool to discover what indicators are available before
         querying specific indicator values with get_stock_indicator.
+
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Read the schema resource first to understand the data structure.
         """
-        logger.debug("get_stock_indicators_called", format=format)
+        logger.debug("get_stock_indicators_called", query=query, format=format)
 
         try:
             client = get_client(ctx)
 
             indicators = await client.stocks.get_indicators()
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(indicators, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = indicators.model_dump(mode="json", exclude_none=True)
             logger.debug("get_stock_indicators_success", format=format)
             return format_output(data, format)

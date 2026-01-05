@@ -14,6 +14,7 @@ from gurufocus_api.logging import get_logger
 from ..context import get_client
 from ..errors import raise_api_error
 from ..formatting import OutputFormat, format_output
+from ..query import apply_query
 
 logger = get_logger(__name__)
 
@@ -27,6 +28,16 @@ def register_guru_tools(mcp: FastMCP) -> None:
 
     @mcp.tool
     async def get_gurulist(
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'us_gurus[:10]' (first 10), 'us_gurus[*].name' (just names)"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -37,6 +48,8 @@ def register_guru_tools(mcp: FastMCP) -> None:
         ctx: Context = None,  # type: ignore[assignment]
     ) -> str | dict[str, Any]:
         """Get list of all tracked institutional gurus (Super Investors).
+
+        Schema: gurufocus://schemas/GuruList
 
         Returns a comprehensive list of tracked institutional investors:
         - us_gurus: US institutional gurus (13F filers)
@@ -55,16 +68,31 @@ def register_guru_tools(mcp: FastMCP) -> None:
 
         Note: This is a large dataset (~2.6MB) - cache is recommended.
 
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Read the schema resource first to understand the data structure.
+
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
         - 'json': Standard JSON format for debugging or compatibility
         """
-        logger.debug("get_gurulist_called", format=format)
+        logger.debug("get_gurulist_called", query=query, format=format)
 
         try:
             client = get_client(ctx)
 
             gurulist = await client.gurus.get_gurulist()
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(gurulist, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = gurulist.model_dump(mode="json", exclude_none=True)
             logger.debug("get_gurulist_success", format=format)
             return format_output(data, format)
@@ -92,6 +120,16 @@ def register_guru_tools(mcp: FastMCP) -> None:
             int,
             Field(default=1, description="Page number for paginated results"),
         ] = 1,
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'picks[:10]' (first 10), 'picks[*].symbol' (just symbols)"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -102,6 +140,8 @@ def register_guru_tools(mcp: FastMCP) -> None:
         ctx: Context = None,  # type: ignore[assignment]
     ) -> str | dict[str, Any]:
         """Get a guru's stock picks and trading activity.
+
+        Schema: gurufocus://schemas/GuruPicks
 
         Returns the guru's stock picks with detailed transaction info:
         - guru_id: Guru identifier
@@ -122,6 +162,9 @@ def register_guru_tools(mcp: FastMCP) -> None:
         Use guru_id from get_gurulist to look up specific investors.
         Common guru IDs: 7 (Warren Buffett/Berkshire), 4 (Bill Ackman).
 
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Read the schema resource first to understand the data structure.
+
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
         - 'json': Standard JSON format for debugging or compatibility
@@ -131,6 +174,7 @@ def register_guru_tools(mcp: FastMCP) -> None:
             guru_id=guru_id,
             start_date=start_date,
             page=page,
+            query=query,
             format=format,
         )
 
@@ -138,6 +182,18 @@ def register_guru_tools(mcp: FastMCP) -> None:
             client = get_client(ctx)
 
             picks = await client.gurus.get_guru_picks(guru_id, start_date, page)
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(picks, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = picks.model_dump(mode="json", exclude_none=True)
             logger.debug("get_guru_picks_success", guru_id=guru_id, format=format)
             return format_output(data, format)

@@ -13,7 +13,7 @@ from gurufocus_api import GuruFocusClient
 from gurufocus_api.logging import configure_logging, get_logger
 
 from .config import MCPServerSettings, get_settings
-from .resources import register_stock_resources
+from .resources import register_schema_resources, register_stock_resources
 from .tools import (
     register_analysis_tools,
     register_economic_tools,
@@ -103,6 +103,7 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
     register_etf_tools(mcp)
     register_personal_tools(mcp)
     register_stock_resources(mcp)
+    register_schema_resources(mcp)
 
     # Count registered resources and tools
     resource_count = len(mcp._resource_manager._templates) + len(mcp._resource_manager._resources)
