@@ -208,3 +208,4 @@ __marimo__/
 
 packages/gurufocus-api/.responses
 junit.xml
+tmp/
