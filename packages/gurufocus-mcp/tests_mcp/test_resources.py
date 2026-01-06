@@ -25,31 +25,36 @@ async def client(server):
 class TestResourceRegistration:
     """Tests for resource registration."""
 
-    def test_no_static_resources(self, server) -> None:
-        """Test that no static resources are registered."""
+    def test_schema_resources_registered(self, server) -> None:
+        """Test that schema resources are registered."""
         resource_count = len(server._resource_manager._resources)
-        assert resource_count == 0
+        # 1 static resource: list_all_schemas (gurufocus://schemas)
+        assert resource_count == 1
 
-    def test_no_resource_templates(self, server) -> None:
-        """Test that no resource templates are registered."""
+    def test_schema_templates_registered(self, server) -> None:
+        """Test that schema resource templates are registered."""
         template_count = len(server._resource_manager._templates)
-        assert template_count == 0
+        # 2 templates: get_schema, get_category_schemas
+        assert template_count == 2
 
 
 class TestResourceDiscovery:
     """Tests for resource discovery via MCP protocol."""
 
     @pytest.mark.asyncio
-    async def test_list_resources_returns_empty(self, client: Client) -> None:
-        """Test that list_resources returns no resources."""
+    async def test_list_resources_includes_schemas(self, client: Client) -> None:
+        """Test that list_resources returns schema resources."""
         resources = await client.list_resources()
-        assert len(resources) == 0
+        # 1 static resource: list_all_schemas
+        assert len(resources) == 1
+        assert any("schemas" in str(r.uri) for r in resources)
 
     @pytest.mark.asyncio
-    async def test_no_resource_templates_via_protocol(self, client: Client) -> None:
-        """Test that no resource templates are returned via protocol."""
+    async def test_schema_templates_via_protocol(self, client: Client) -> None:
+        """Test that schema templates are returned via protocol."""
         templates = await client.list_resource_templates()
-        assert len(templates) == 0
+        # 2 templates for schema lookups
+        assert len(templates) == 2
 
 
 class TestResourceErrorHandling:

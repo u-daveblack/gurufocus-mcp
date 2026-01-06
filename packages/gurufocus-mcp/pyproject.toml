@@ -21,6 +21,7 @@ classifiers = [
 dependencies = [
     "gurufocus-api",
     "fastmcp>=0.4",
+    "jmespath>=1.0",
     "structlog>=24.0",
     "python-toon>=0.1",
 ]

@@ -4,8 +4,10 @@ An MCP (Model Context Protocol) server that exposes GuruFocus financial data to 
 
 ## Features
 
-- **50+ Analysis Tools**: Stocks, gurus, insiders, politicians, economic data, and more
+- **54 Analysis Tools**: Stocks, gurus, insiders, politicians, economic data, and more
 - **Data Resources**: Direct access to formatted financial data via URI templates
+- **JMESPath Query Support**: Filter and transform responses inline to reduce context usage
+- **Schema Resources**: AI agents can discover data structures to write correct queries
 - **Multiple Transports**: stdio (Claude Desktop), HTTP/SSE, WebSocket
 - **Error Handling**: Graceful handling of invalid symbols, rate limits, and API errors
 - **TOON Format**: 30-60% token reduction vs JSON for efficient LLM contexts
@@ -183,6 +185,14 @@ After adding the configuration, restart Claude Desktop. You should see the GuruF
 | `compare_stocks`      | Compare multiple stocks side-by-side      |
 | `get_stock_news`      | Recent news for a stock                   |
 
+### Schema Tools (3 tools)
+
+| Tool                       | Description                                    |
+| -------------------------- | ---------------------------------------------- |
+| `list_schemas`             | List all available model schemas with categories |
+| `get_schema`               | Get JSON schema for a specific model           |
+| `get_schemas_by_category`  | Get all schemas in a category                  |
+
 ## Available Resources
 
 Resources provide direct data access via URI templates:
@@ -208,6 +218,46 @@ gurufocus://guru/{guru_id}/picks        - Guru's portfolio
 gurufocus://guru/{guru_id}/trades       - Guru's recent trades
 gurufocus://stock/{symbol}/gurus        - Gurus holding a stock
 ```
+
+### Schema Discovery
+
+Schema tools help AI agents understand data structures to write correct JMESPath queries:
+
+```
+list_schemas()                          - List all available model schemas with categories
+get_schema(model_name)                  - Get JSON schema for a specific model
+get_schemas_by_category(category)       - Get schemas by category (e.g., ratios, dividends)
+```
+
+Schema resources are also available (but tools are preferred as Claude Desktop doesn't fully support resource templates):
+
+```
+gurufocus://schemas                     - List all available model schemas
+gurufocus://schemas/{model_name}        - Get JSON schema for a specific model
+gurufocus://schemas/category/{category} - Get schemas by category
+```
+
+## JMESPath Query Support
+
+Tools that return large datasets support JMESPath queries to filter and transform data inline:
+
+```python
+# Get only the last 5 financial periods
+get_stock_financials(symbol="AAPL", query="periods[:5]")
+
+# Extract just revenue and profit from each period
+get_stock_financials(symbol="AAPL", query="periods[*].{period: period, revenue: revenue, profit: net_income}")
+
+# Get dividend amounts only
+get_stock_dividend(symbol="AAPL", query="payments[*].amount")
+
+# Filter insider updates to purchases only
+get_insider_updates(query="updates[?type=='P']")
+```
+
+JMESPath is the same query language used by AWS CLI. See [jmespath.org](https://jmespath.org/tutorial.html) for more examples.
+
+**Tools with query support:** `get_stock_dividend`, `get_stock_financials`, `get_stock_keyratios`, `get_stock_price_ohlc`, `get_stock_ownership`, `get_stock_indicators`, `get_gurulist`, `get_guru_picks`, `get_insider_updates`
 
 ## Example Conversations
 
@@ -337,7 +387,7 @@ gurufocus_mcp/
 ├── config.py            # Configuration management
 ├── server.py            # MCP server setup
 ├── formatting.py        # TOON/JSON formatters
-├── tools/               # Tool handlers (50+ tools)
+├── tools/               # Tool handlers (54 tools)
 │   ├── stocks.py        # Stock data tools
 │   ├── insiders.py      # Insider activity tools
 │   ├── gurus.py         # Guru/institutional investor tools
@@ -345,7 +395,8 @@ gurufocus_mcp/
 │   ├── economic.py      # Economic data tools
 │   ├── reference.py     # Reference data tools
 │   ├── personal.py      # Account/portfolio tools
-│   └── etfs.py          # ETF tools
+│   ├── etfs.py          # ETF tools
+│   └── schemas.py       # Schema discovery tools
 └── resources/           # Resource handlers
 ```
 

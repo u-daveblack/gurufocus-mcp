@@ -2,7 +2,7 @@
 
 > NOTE: This repo is currently a work in progress and is not yet ready for production use.
 
-A comprehensive GuruFocus MCP server and Python API library that serves as both a production-ready tool and a learning resource for building MCP servers.
+A comprehensive GuruFocus MCP server and Python API client library with Pydantic models for all responses.
 
 ## Packages
 
@@ -130,16 +130,16 @@ All settings can be configured via environment variables with the `GURUFOCUS_` p
 
 ### Required
 
-| Variable | Description |
-|----------|-------------|
+| Variable              | Description              |
+| --------------------- | ------------------------ |
 | `GURUFOCUS_API_TOKEN` | Your GuruFocus API token |
 
 ### Cache Settings
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GURUFOCUS_CACHE_ENABLED` | `true` | Enable response caching |
-| `GURUFOCUS_CACHE_DIR` | `.cache/gurufocus-mcp` | Directory for cache storage |
+| Variable                  | Default                | Description                 |
+| ------------------------- | ---------------------- | --------------------------- |
+| `GURUFOCUS_CACHE_ENABLED` | `true`                 | Enable response caching     |
+| `GURUFOCUS_CACHE_DIR`     | `.cache/gurufocus-mcp` | Directory for cache storage |
 
 **Recommended:** Set an absolute path for `GURUFOCUS_CACHE_DIR` to ensure consistent caching across sessions:
 
@@ -165,31 +165,31 @@ Or in Claude Desktop config:
 
 ### Rate Limiting
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GURUFOCUS_RATE_LIMIT_ENABLED` | `true` | Enable rate limiting |
-| `GURUFOCUS_RATE_LIMIT_RPM` | `30.0` | Maximum requests per minute |
-| `GURUFOCUS_RATE_LIMIT_DAILY` | `0` | Maximum requests per day (0 = unlimited) |
+| Variable                       | Default | Description                              |
+| ------------------------------ | ------- | ---------------------------------------- |
+| `GURUFOCUS_RATE_LIMIT_ENABLED` | `true`  | Enable rate limiting                     |
+| `GURUFOCUS_RATE_LIMIT_RPM`     | `30.0`  | Maximum requests per minute              |
+| `GURUFOCUS_RATE_LIMIT_DAILY`   | `0`     | Maximum requests per day (0 = unlimited) |
 
 ### API Settings
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GURUFOCUS_API_BASE_URL` | `https://api.gurufocus.com/public/user` | API base URL |
-| `GURUFOCUS_API_TIMEOUT` | `30.0` | Request timeout in seconds |
-| `GURUFOCUS_API_MAX_RETRIES` | `3` | Maximum retry attempts for failed requests |
+| Variable                    | Default                                 | Description                                |
+| --------------------------- | --------------------------------------- | ------------------------------------------ |
+| `GURUFOCUS_API_BASE_URL`    | `https://api.gurufocus.com/public/user` | API base URL                               |
+| `GURUFOCUS_API_TIMEOUT`     | `30.0`                                  | Request timeout in seconds                 |
+| `GURUFOCUS_API_MAX_RETRIES` | `3`                                     | Maximum retry attempts for failed requests |
 
 ### Output Format
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GURUFOCUS_DEFAULT_OUTPUT_FORMAT` | `toon` | Default format: `toon` (token-efficient) or `json` |
+| Variable                          | Default | Description                                        |
+| --------------------------------- | ------- | -------------------------------------------------- |
+| `GURUFOCUS_DEFAULT_OUTPUT_FORMAT` | `toon`  | Default format: `toon` (token-efficient) or `json` |
 
 ### Logging
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GURUFOCUS_LOG_LEVEL` | `INFO` | Logging level: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| Variable               | Default   | Description                                                   |
+| ---------------------- | --------- | ------------------------------------------------------------- |
+| `GURUFOCUS_LOG_LEVEL`  | `INFO`    | Logging level: `DEBUG`, `INFO`, `WARNING`, `ERROR`            |
 | `GURUFOCUS_LOG_FORMAT` | `console` | Log format: `console` (human-readable) or `json` (structured) |
 
 ## Development

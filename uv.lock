@@ -628,7 +628,7 @@ wheels = [
 
 [[package]]
 name = "gurufocus-api"
-version = "0.5.0"
+version = "0.5.1"
 source = { editable = "packages/gurufocus-api" }
 dependencies = [
     { name = "diskcache" },
@@ -676,11 +676,12 @@ provides-extras = ["otel", "dev"]
 
 [[package]]
 name = "gurufocus-mcp"
-version = "0.5.0"
+version = "0.5.1"
 source = { editable = "packages/gurufocus-mcp" }
 dependencies = [
     { name = "fastmcp" },
     { name = "gurufocus-api" },
+    { name = "jmespath" },
     { name = "python-toon" },
     { name = "structlog" },
 ]
@@ -698,6 +699,7 @@ dev = [
 requires-dist = [
     { name = "fastmcp", specifier = ">=0.4" },
     { name = "gurufocus-api", editable = "packages/gurufocus-api" },
+    { name = "jmespath", specifier = ">=1.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24" },
@@ -710,7 +712,7 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "gurufocus-mcp-workspace"
-version = "0.5.0"
+version = "0.5.1"
 source = { virtual = "." }
 
 [package.dev-dependencies]
@@ -931,6 +933,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7b/6f/357efd7602486741aa73ffc0617fb310a29b588ed0fd69c2399acbb85b0c/jeepney-0.9.0.tar.gz", hash = "sha256:cf0e9e845622b81e4a28df94c40345400256ec608d0e55bb8a3feaa9163f5732", size = 106758, upload-time = "2025-02-27T18:51:01.684Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b2/a3/e137168c9c44d18eff0376253da9f1e9234d0239e0ee230d2fee6cea8e55/jeepney-0.9.0-py3-none-any.whl", hash = "sha256:97e5714520c16fc0a45695e5365a2e11b81ea79bba796e26f9f1d178cb182683", size = 49010, upload-time = "2025-02-27T18:51:00.104Z" },
+]
+
+[[package]]
+name = "jmespath"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/00/2a/e867e8531cf3e36b41201936b7fa7ba7b5702dbef42922193f05c8976cd6/jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe", size = 25843, upload-time = "2022-06-17T18:00:12.224Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/31/b4/b9b800c45527aadd64d5b442f9b932b00648617eb5d63d2c7a6587b7cafc/jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980", size = 20256, upload-time = "2022-06-17T18:00:10.251Z" },
 ]
 
 [[package]]

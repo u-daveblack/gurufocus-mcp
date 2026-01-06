@@ -39,10 +39,10 @@ class TestMCPProtocolCompliance:
 
     @pytest.mark.asyncio
     async def test_list_tools_returns_all_stock_tools(self, client: Client) -> None:
-        """Test that list_tools returns all stock tools (51 = 53 minus 2 disabled portfolio tools)."""
+        """Test that list_tools returns all tools (54 = 53 minus 2 disabled portfolio tools + 3 schema tools)."""
         tools = await client.list_tools()
 
-        assert len(tools) == 51
+        assert len(tools) == 54
         tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
         assert "get_etf_list" in tool_names
@@ -92,17 +92,19 @@ class TestMCPProtocolCompliance:
         assert "get_usage_estimate" in tool_names
 
     @pytest.mark.asyncio
-    async def test_no_resource_templates(self, client: Client) -> None:
-        """Test that no resource templates are registered (summary is now a tool)."""
+    async def test_schema_resource_templates_registered(self, client: Client) -> None:
+        """Test that schema resource templates are registered."""
         templates = await client.list_resource_templates()
-
-        assert len(templates) == 0
+        # 2 templates: get_schema, get_category_schemas
+        assert len(templates) == 2
 
     @pytest.mark.asyncio
-    async def test_list_resources_returns_empty(self, client: Client) -> None:
-        """Test that list_resources returns no resources."""
+    async def test_schema_resources_registered(self, client: Client) -> None:
+        """Test that schema resources are registered."""
         resources = await client.list_resources()
-        assert len(resources) == 0
+        # 1 static resource: list_all_schemas (gurufocus://schemas)
+        assert len(resources) == 1
+        assert any("schemas" in str(r.uri) for r in resources)
 
 
 class TestToolFormats:

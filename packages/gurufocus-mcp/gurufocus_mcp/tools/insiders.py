@@ -14,6 +14,7 @@ from gurufocus_api.logging import get_logger
 from ..context import get_client
 from ..errors import raise_api_error
 from ..formatting import OutputFormat, format_output
+from ..query import apply_query
 
 logger = get_logger(__name__)
 
@@ -31,6 +32,16 @@ def register_insider_tools(mcp: FastMCP) -> None:
             int,
             Field(default=1, description="Page number for paginated results"),
         ] = 1,
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                description=(
+                    "JMESPath query to filter/transform the response. "
+                    "Examples: 'updates[:10]' (first 10), 'updates[?type==`P`]' (purchases only)"
+                ),
+            ),
+        ] = None,
         format: Annotated[
             OutputFormat,
             Field(
@@ -41,6 +52,8 @@ def register_insider_tools(mcp: FastMCP) -> None:
         ctx: Context = None,  # type: ignore[assignment]
     ) -> str | dict[str, Any]:
         """Get recent insider transaction updates.
+
+        Schema: Call get_schema("InsiderUpdatesResponse") to see the full schema.
 
         Returns a list of recent insider transactions filed with the SEC:
         - symbol: Stock ticker
@@ -55,16 +68,31 @@ def register_insider_tools(mcp: FastMCP) -> None:
         Use this tool to monitor recent insider buying and selling activity
         across all stocks. High insider buying can be a bullish signal.
 
+        Use the 'query' parameter with a JMESPath expression to filter the response.
+        Call get_schema() first to understand the data structure.
+
         The 'format' parameter controls output encoding:
         - 'toon': Token-efficient format (30-60% smaller), recommended for AI contexts
         - 'json': Standard JSON format for debugging or compatibility
         """
-        logger.debug("get_insider_updates_called", page=page, format=format)
+        logger.debug("get_insider_updates_called", page=page, query=query, format=format)
 
         try:
             client = get_client(ctx)
 
             updates = await client.insiders.get_updates(page=page)
+
+            # If query provided, apply JMESPath and return result directly
+            if query:
+                try:
+                    result = apply_query(updates, query)
+                    if isinstance(result, dict):
+                        return format_output(result, format) if format == "toon" else result
+                    wrapped: dict[str, Any] = {"result": result, "query": query}
+                    return format_output(wrapped, format) if format == "toon" else wrapped
+                except ValueError as e:
+                    raise ToolError(str(e)) from e
+
             data = updates.model_dump(mode="json", exclude_none=True)
             logger.debug("get_insider_updates_success", page=page, format=format)
             return format_output(data, format)
