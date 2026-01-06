@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `gurufocus://schemas/{model_name}` - Get JSON schema for a specific model
   - `gurufocus://schemas/category/{category_name}` - Get schemas by category
   - Note: Tools are preferred over resources as Claude Desktop doesn't fully support resource templates
+- Added release procedure `docs/release_procedure.md` and updated bumpver configuration to prefix tags with `v` to match the versioning scheme
 
 ## [v0.5.1] - 2025-12-29
 

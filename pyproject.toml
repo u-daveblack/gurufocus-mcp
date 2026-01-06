@@ -72,6 +72,7 @@ addopts = "-ra -q --import-mode=importlib"
 current_version = "0.5.1"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "chore: bump version {old_version} -> {new_version}"
+tag_name = "v{version}"
 commit = true
 tag = true
 push = false
