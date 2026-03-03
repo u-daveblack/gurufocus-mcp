@@ -107,9 +107,13 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
     register_stock_resources(mcp)
     register_schema_resources(mcp)
 
-    # Count registered resources and tools
-    resource_count = len(mcp._resource_manager._templates) + len(mcp._resource_manager._resources)
-    tool_count = len(mcp._tool_manager._tools)
+    # Count registered resources and tools via public async API
+    import asyncio
+
+    tool_count = len(asyncio.run(mcp.list_tools()))
+    resource_count = len(asyncio.run(mcp.list_resources())) + len(
+        asyncio.run(mcp.list_resource_templates())
+    )
     logger.info(
         "gurufocus_mcp_server_created",
         resources=resource_count,
