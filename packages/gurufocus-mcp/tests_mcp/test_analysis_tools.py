@@ -26,33 +26,35 @@ async def client(server):
 class TestQGARPAnalysisToolRegistration:
     """Tests for QGARP analysis tool registration."""
 
-    def test_qgarp_analysis_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_qgarp_analysis_tool_registered(self, server) -> None:
         """Test that get_qgarp_analysis tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_qgarp_analysis" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_qgarp_analysis" in tool_names
 
-    def test_qgarp_analysis_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_qgarp_analysis_tool_has_description(self, server) -> None:
         """Test that get_qgarp_analysis tool has a description."""
-        tools = server._tool_manager._tools
-        analysis_tool = tools.get("get_qgarp_analysis")
+        analysis_tool = await server.get_tool("get_qgarp_analysis")
 
         assert analysis_tool is not None
         assert analysis_tool.description is not None
         assert "QGARP" in analysis_tool.description
         assert "scorecard" in analysis_tool.description.lower()
 
-    def test_qgarp_analysis_tool_has_symbol_parameter(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_qgarp_analysis_tool_has_symbol_parameter(self, server) -> None:
         """Test that get_qgarp_analysis tool has symbol parameter."""
-        tools = server._tool_manager._tools
-        analysis_tool = tools.get("get_qgarp_analysis")
+        analysis_tool = await server.get_tool("get_qgarp_analysis")
 
         assert analysis_tool is not None
         assert analysis_tool.parameters is not None
 
-    def test_qgarp_analysis_tool_has_format_parameter(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_qgarp_analysis_tool_has_format_parameter(self, server) -> None:
         """Test that get_qgarp_analysis tool has format parameter."""
-        tools = server._tool_manager._tools
-        analysis_tool = tools.get("get_qgarp_analysis")
+        analysis_tool = await server.get_tool("get_qgarp_analysis")
 
         assert analysis_tool is not None
         assert analysis_tool.parameters is not None

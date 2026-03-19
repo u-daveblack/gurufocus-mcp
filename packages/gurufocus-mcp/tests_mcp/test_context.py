@@ -15,7 +15,7 @@ class TestGetClient:
         """Test that get_client returns client from context when available."""
         mock_client = MagicMock()
         mock_ctx = MagicMock()
-        mock_ctx.fastmcp.state = {"client": mock_client}
+        mock_ctx.lifespan_context = {"client": mock_client}
 
         result = get_client(mock_ctx)
 
@@ -24,7 +24,7 @@ class TestGetClient:
     def test_get_client_raises_when_client_none(self) -> None:
         """Test that get_client raises ToolError when client is None."""
         mock_ctx = MagicMock()
-        mock_ctx.fastmcp.state = {"client": None}
+        mock_ctx.lifespan_context = {"client": None}
 
         with pytest.raises(ToolError) as exc_info:
             get_client(mock_ctx)
@@ -35,18 +35,17 @@ class TestGetClient:
     def test_get_client_raises_when_state_missing(self) -> None:
         """Test that get_client raises ToolError when state is missing."""
         mock_ctx = MagicMock()
-        mock_ctx.fastmcp.state = {}
+        mock_ctx.lifespan_context = {}
 
         with pytest.raises(ToolError) as exc_info:
             get_client(mock_ctx)
 
         assert "not initialized" in str(exc_info.value)
 
-    def test_get_client_handles_missing_state_attribute(self) -> None:
-        """Test that get_client handles missing state attribute gracefully."""
+    def test_get_client_handles_missing_client_key(self) -> None:
+        """Test that get_client handles missing client key gracefully."""
         mock_ctx = MagicMock()
-        # Make state return {} for getattr with default
-        del mock_ctx.fastmcp.state  # Remove state attribute
+        mock_ctx.lifespan_context = {}
 
         with pytest.raises(ToolError) as exc_info:
             get_client(mock_ctx)

@@ -1,5 +1,6 @@
 """Configuration for the GuruFocus MCP server."""
 
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
@@ -50,7 +51,7 @@ class MCPServerSettings(BaseSettings):
         description="Enable response caching",
     )
     cache_dir: str = Field(
-        default=".cache/gurufocus-mcp",
+        default=str(Path.home() / ".cache" / "gurufocus-mcp"),
         description="Directory for cache storage",
     )
 

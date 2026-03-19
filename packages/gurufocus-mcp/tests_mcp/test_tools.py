@@ -1,7 +1,7 @@
 """Tests for MCP tools."""
 
 import pytest
-from fastmcp.client import Client
+from fastmcp import Client
 
 from gurufocus_mcp.config import MCPServerSettings
 from gurufocus_mcp.server import create_server
@@ -25,40 +25,47 @@ async def client(server):
 class TestToolRegistration:
     """Tests for tool registration."""
 
-    def test_get_stock_summary_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_stock_summary_tool_registered(self, server) -> None:
         """Test that get_stock_summary tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
 
-        assert "get_stock_summary" in tools
+        assert "get_stock_summary" in tool_names
 
-    def test_tool_count(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_count(self, server) -> None:
         """Test that 54 tools are registered (53 minus 2 disabled portfolio tools + 3 schema tools)."""
-        tool_count = len(server._tool_manager._tools)
-        assert tool_count == 54
+        tools = await server.list_tools()
+        assert len(tools) == 54
 
-    def test_get_stock_financials_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_stock_financials_tool_registered(self, server) -> None:
         """Test that get_stock_financials tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_financials" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_financials" in tool_names
 
-    def test_get_stock_keyratios_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_stock_keyratios_tool_registered(self, server) -> None:
         """Test that get_stock_keyratios tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_keyratios" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_keyratios" in tool_names
 
-    def test_get_stock_summary_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_stock_summary_has_description(self, server) -> None:
         """Test that get_stock_summary tool has a description."""
-        tools = server._tool_manager._tools
-        summary_tool = tools.get("get_stock_summary")
+        summary_tool = await server.get_tool("get_stock_summary")
 
         assert summary_tool is not None
         assert summary_tool.description is not None
         assert "summary" in summary_tool.description.lower()
 
-    def test_get_stock_summary_has_symbol_parameter(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_stock_summary_has_symbol_parameter(self, server) -> None:
         """Test that get_stock_summary tool has symbol parameter."""
-        tools = server._tool_manager._tools
-        summary_tool = tools.get("get_stock_summary")
+        summary_tool = await server.get_tool("get_stock_summary")
 
         assert summary_tool is not None
         assert summary_tool.parameters is not None
@@ -255,10 +262,10 @@ class TestToolErrorHandling:
 class TestToolFormatParameter:
     """Tests for format parameter on tools."""
 
-    def test_get_stock_summary_has_format_parameter(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_stock_summary_has_format_parameter(self, server) -> None:
         """Test that get_stock_summary tool has format parameter."""
-        tools = server._tool_manager._tools
-        summary_tool = tools.get("get_stock_summary")
+        summary_tool = await server.get_tool("get_stock_summary")
 
         assert summary_tool is not None
         assert summary_tool.parameters is not None
@@ -307,10 +314,10 @@ class TestToolFormatParameter:
 class TestGetStockFinancialsTool:
     """Tests for get_stock_financials tool."""
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_financials tool has a description."""
-        tools = server._tool_manager._tools
-        financials_tool = tools.get("get_stock_financials")
+        financials_tool = await server.get_tool("get_stock_financials")
 
         assert financials_tool is not None
         assert financials_tool.description is not None
@@ -368,10 +375,10 @@ class TestGetStockFinancialsTool:
 class TestGetStockKeyratiosTool:
     """Tests for get_stock_keyratios tool."""
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_keyratios tool has a description."""
-        tools = server._tool_manager._tools
-        keyratios_tool = tools.get("get_stock_keyratios")
+        keyratios_tool = await server.get_tool("get_stock_keyratios")
 
         assert keyratios_tool is not None
         assert keyratios_tool.description is not None
@@ -410,15 +417,17 @@ class TestGetStockKeyratiosTool:
 class TestGetStockGurusTool:
     """Tests for get_stock_gurus tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_gurus tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_gurus" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_gurus" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_gurus tool has a description."""
-        tools = server._tool_manager._tools
-        gurus_tool = tools.get("get_stock_gurus")
+        gurus_tool = await server.get_tool("get_stock_gurus")
 
         assert gurus_tool is not None
         assert gurus_tool.description is not None
@@ -457,15 +466,17 @@ class TestGetStockGurusTool:
 class TestGetStockExecutivesTool:
     """Tests for get_stock_executives tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_executives tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_executives" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_executives" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_executives tool has a description."""
-        tools = server._tool_manager._tools
-        executives_tool = tools.get("get_stock_executives")
+        executives_tool = await server.get_tool("get_stock_executives")
 
         assert executives_tool is not None
         assert executives_tool.description is not None
@@ -504,15 +515,17 @@ class TestGetStockExecutivesTool:
 class TestGetStockTradesHistoryTool:
     """Tests for get_stock_trades_history tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_trades_history tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_trades_history" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_trades_history" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_trades_history tool has a description."""
-        tools = server._tool_manager._tools
-        trades_tool = tools.get("get_stock_trades_history")
+        trades_tool = await server.get_tool("get_stock_trades_history")
 
         assert trades_tool is not None
         assert trades_tool.description is not None
@@ -551,15 +564,17 @@ class TestGetStockTradesHistoryTool:
 class TestGetStockOperatingDataTool:
     """Tests for get_stock_operating_data tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_operating_data tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_operating_data" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_operating_data" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_operating_data tool has a description."""
-        tools = server._tool_manager._tools
-        operating_tool = tools.get("get_stock_operating_data")
+        operating_tool = await server.get_tool("get_stock_operating_data")
 
         assert operating_tool is not None
         assert operating_tool.description is not None
@@ -598,15 +613,17 @@ class TestGetStockOperatingDataTool:
 class TestGetStockSegmentsDataTool:
     """Tests for get_stock_segments_data tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_segments_data tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_segments_data" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_segments_data" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_segments_data tool has a description."""
-        tools = server._tool_manager._tools
-        segments_tool = tools.get("get_stock_segments_data")
+        segments_tool = await server.get_tool("get_stock_segments_data")
 
         assert segments_tool is not None
         assert segments_tool.description is not None
@@ -645,15 +662,17 @@ class TestGetStockSegmentsDataTool:
 class TestGetStockOwnershipTool:
     """Tests for get_stock_ownership tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_ownership tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_ownership" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_ownership" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_ownership tool has a description."""
-        tools = server._tool_manager._tools
-        ownership_tool = tools.get("get_stock_ownership")
+        ownership_tool = await server.get_tool("get_stock_ownership")
 
         assert ownership_tool is not None
         assert ownership_tool.description is not None
@@ -692,15 +711,17 @@ class TestGetStockOwnershipTool:
 class TestGetStockIndicatorHistoryTool:
     """Tests for get_stock_indicator_history tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_indicator_history tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_indicator_history" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_indicator_history" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_indicator_history tool has a description."""
-        tools = server._tool_manager._tools
-        history_tool = tools.get("get_stock_indicator_history")
+        history_tool = await server.get_tool("get_stock_indicator_history")
 
         assert history_tool is not None
         assert history_tool.description is not None
@@ -742,15 +763,17 @@ class TestGetStockIndicatorHistoryTool:
 class TestGetStockIndicatorsTool:
     """Tests for get_stock_indicators tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_indicators tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_indicators" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_indicators" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_indicators tool has a description."""
-        tools = server._tool_manager._tools
-        indicators_tool = tools.get("get_stock_indicators")
+        indicators_tool = await server.get_tool("get_stock_indicators")
 
         assert indicators_tool is not None
         assert indicators_tool.description is not None
@@ -780,15 +803,17 @@ class TestGetStockIndicatorsTool:
 class TestGetStockIndicatorTool:
     """Tests for get_stock_indicator tool."""
 
-    def test_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_registered(self, server) -> None:
         """Test that get_stock_indicator tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_stock_indicator" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_stock_indicator" in tool_names
 
-    def test_tool_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_has_description(self, server) -> None:
         """Test that get_stock_indicator tool has a description."""
-        tools = server._tool_manager._tools
-        indicator_tool = tools.get("get_stock_indicator")
+        indicator_tool = await server.get_tool("get_stock_indicator")
 
         assert indicator_tool is not None
         assert indicator_tool.description is not None

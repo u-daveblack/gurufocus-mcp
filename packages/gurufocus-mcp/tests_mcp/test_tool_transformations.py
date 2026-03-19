@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
-from fastmcp.client import Client
+from fastmcp import Client
 from fastmcp.exceptions import ToolError
 
 from gurufocus_api.exceptions import (

@@ -17,34 +17,40 @@ def server(monkeypatch: pytest.MonkeyPatch):
 class TestSchemaToolRegistration:
     """Tests for schema tool registration."""
 
-    def test_list_schemas_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_list_schemas_tool_registered(self, server) -> None:
         """Test that list_schemas tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "list_schemas" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "list_schemas" in tool_names
 
-    def test_get_schema_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_schema_tool_registered(self, server) -> None:
         """Test that get_schema tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_schema" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_schema" in tool_names
 
-    def test_get_schemas_by_category_tool_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_schemas_by_category_tool_registered(self, server) -> None:
         """Test that get_schemas_by_category tool is registered."""
-        tools = list(server._tool_manager._tools.keys())
-        assert "get_schemas_by_category" in tools
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
+        assert "get_schemas_by_category" in tool_names
 
-    def test_list_schemas_has_description(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_list_schemas_has_description(self, server) -> None:
         """Test that list_schemas tool has a description."""
-        tools = server._tool_manager._tools
-        tool = tools.get("list_schemas")
+        tool = await server.get_tool("list_schemas")
 
         assert tool is not None
         assert tool.description is not None
         assert "schema" in tool.description.lower()
 
-    def test_get_schema_has_model_name_parameter(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_schema_has_model_name_parameter(self, server) -> None:
         """Test that get_schema tool has model_name parameter."""
-        tools = server._tool_manager._tools
-        tool = tools.get("get_schema")
+        tool = await server.get_tool("get_schema")
 
         assert tool is not None
         assert tool.parameters is not None
@@ -52,18 +58,19 @@ class TestSchemaToolRegistration:
         schema = tool.parameters
         assert "model_name" in str(schema)
 
-    def test_get_schemas_by_category_has_category_parameter(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_get_schemas_by_category_has_category_parameter(self, server) -> None:
         """Test that get_schemas_by_category tool has category parameter."""
-        tools = server._tool_manager._tools
-        tool = tools.get("get_schemas_by_category")
+        tool = await server.get_tool("get_schemas_by_category")
 
         assert tool is not None
         assert tool.parameters is not None
         schema = tool.parameters
         assert "category" in str(schema)
 
-    def test_tool_count_includes_schema_tools(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_tool_count_includes_schema_tools(self, server) -> None:
         """Test that tool count includes the 3 schema tools (54 total)."""
-        tool_count = len(server._tool_manager._tools)
+        tools = await server.list_tools()
         # Should now be 54 (51 original + 3 schema tools)
-        assert tool_count == 54
+        assert len(tools) == 54

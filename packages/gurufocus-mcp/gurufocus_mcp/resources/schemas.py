@@ -4,7 +4,7 @@ These resources allow AI agents to understand the exact structure of data
 returned by tools, enabling them to write correct JMESPath queries.
 """
 
-from typing import Any
+import json
 
 from fastmcp import FastMCP
 from pydantic import BaseModel
@@ -233,25 +233,27 @@ def register_schema_resources(mcp: FastMCP) -> None:
     """
 
     @mcp.resource("gurufocus://schemas")
-    async def list_all_schemas() -> dict[str, Any]:
+    async def list_all_schemas() -> str:
         """List all available model schemas.
 
         Returns a categorized list of all schema names that can be queried via
         gurufocus://schemas/{model_name}. Use this to discover available schemas
         before fetching specific ones.
         """
-        return {
-            "total_schemas": len(SCHEMA_MODELS),
-            "categories": SCHEMA_CATEGORIES,
-            "all_schemas": sorted(SCHEMA_MODELS.keys()),
-            "usage": (
-                "Read a specific schema with: gurufocus://schemas/{model_name}\n"
-                "Example: gurufocus://schemas/FinancialStatements"
-            ),
-        }
+        return json.dumps(
+            {
+                "total_schemas": len(SCHEMA_MODELS),
+                "categories": SCHEMA_CATEGORIES,
+                "all_schemas": sorted(SCHEMA_MODELS.keys()),
+                "usage": (
+                    "Read a specific schema with: gurufocus://schemas/{model_name}\n"
+                    "Example: gurufocus://schemas/FinancialStatements"
+                ),
+            }
+        )
 
     @mcp.resource("gurufocus://schemas/{model_name}")
-    async def get_schema(model_name: str) -> dict[str, Any]:
+    async def get_schema(model_name: str) -> str:
         """Get JSON Schema for a specific Pydantic model.
 
         Use this to understand the exact structure of data returned by tools.
@@ -286,14 +288,16 @@ def register_schema_resources(mcp: FastMCP) -> None:
 
         schema = model_class.model_json_schema()
 
-        return {
-            "model_name": model_name,
-            "python_import": f"from gurufocus_api.models import {model_name}",
-            "schema": schema,
-        }
+        return json.dumps(
+            {
+                "model_name": model_name,
+                "python_import": f"from gurufocus_api.models import {model_name}",
+                "schema": schema,
+            }
+        )
 
     @mcp.resource("gurufocus://schemas/category/{category_name}")
-    async def get_category_schemas(category_name: str) -> dict[str, Any]:
+    async def get_category_schemas(category_name: str) -> str:
         """Get all schemas for a specific category.
 
         Useful for understanding related data models together.
@@ -318,8 +322,10 @@ def register_schema_resources(mcp: FastMCP) -> None:
             if model_class:
                 schemas[name] = model_class.model_json_schema()
 
-        return {
-            "category": category_name,
-            "model_count": len(schemas),
-            "schemas": schemas,
-        }
+        return json.dumps(
+            {
+                "category": category_name,
+                "model_count": len(schemas),
+                "schemas": schemas,
+            }
+        )

@@ -29,7 +29,7 @@ def get_client(ctx: Context) -> GuruFocusClient:
     Raises:
         ToolError: If the client is not initialized
     """
-    client: GuruFocusClient | None = getattr(ctx.fastmcp, "state", {}).get("client")
+    client: GuruFocusClient | None = ctx.lifespan_context.get("client")
     if client is None:
         raise ToolError(
             "GuruFocus client not initialized. "
