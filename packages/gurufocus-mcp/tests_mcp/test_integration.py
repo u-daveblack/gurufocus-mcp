@@ -8,7 +8,7 @@ These tests verify end-to-end functionality including:
 """
 
 import pytest
-from fastmcp.client import Client
+from fastmcp import Client
 
 from gurufocus_mcp.config import MCPServerSettings
 from gurufocus_mcp.server import create_server

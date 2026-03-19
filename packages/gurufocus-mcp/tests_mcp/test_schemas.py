@@ -1,7 +1,7 @@
 """Tests for schema resources."""
 
 import pytest
-from fastmcp.client import Client
+from fastmcp import Client
 
 from gurufocus_mcp.config import MCPServerSettings
 from gurufocus_mcp.server import create_server

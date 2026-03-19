@@ -1,7 +1,7 @@
 """Tests for MCP resources."""
 
 import pytest
-from fastmcp.client import Client
+from fastmcp import Client
 
 from gurufocus_mcp.config import MCPServerSettings
 from gurufocus_mcp.server import create_server
@@ -25,17 +25,19 @@ async def client(server):
 class TestResourceRegistration:
     """Tests for resource registration."""
 
-    def test_schema_resources_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_schema_resources_registered(self, server) -> None:
         """Test that schema resources are registered."""
-        resource_count = len(server._resource_manager._resources)
+        resources = await server.list_resources()
         # 1 static resource: list_all_schemas (gurufocus://schemas)
-        assert resource_count == 1
+        assert len(resources) == 1
 
-    def test_schema_templates_registered(self, server) -> None:
+    @pytest.mark.asyncio
+    async def test_schema_templates_registered(self, server) -> None:
         """Test that schema resource templates are registered."""
-        template_count = len(server._resource_manager._templates)
+        templates = await server.list_resource_templates()
         # 2 templates: get_schema, get_category_schemas
-        assert template_count == 2
+        assert len(templates) == 2
 
 
 class TestResourceDiscovery:

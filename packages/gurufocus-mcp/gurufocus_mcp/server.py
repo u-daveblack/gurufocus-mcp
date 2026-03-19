@@ -6,6 +6,7 @@ GuruFocus financial data to AI assistants via the Model Context Protocol.
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -56,12 +57,11 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
     logger = get_logger(__name__)
 
     @asynccontextmanager
-    async def lifespan(mcp: FastMCP) -> AsyncIterator[None]:
+    async def lifespan(mcp: FastMCP) -> AsyncIterator[dict[str, Any]]:
         """Manage server lifecycle and shared resources."""
         if _default_settings is None or not _default_settings.validate_api_token():
             logger.warning("gurufocus_api_token_not_set")
-            mcp.state = {"client": None}  # type: ignore[attr-defined]
-            yield
+            yield {"client": None}
             return
 
         # Create and share the GuruFocus client using async context manager
@@ -77,14 +77,19 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
             rate_limit_rpm=_default_settings.rate_limit_rpm,
             rate_limit_daily=_default_settings.rate_limit_daily,
         ) as client:
-            # Store client on server instance (accessible via ctx.fastmcp.state)
-            mcp.state = {"client": client}  # type: ignore[attr-defined]
             logger.debug("gurufocus_client_initialized")
-
-            yield
-
-            # Cleanup state reference (client closed automatically by context manager)
-            mcp.state = {"client": None}  # type: ignore[attr-defined]
+            tool_count = len(await mcp.list_tools())
+            resource_count = len(await mcp.list_resources()) + len(
+                await mcp.list_resource_templates()
+            )
+            logger.info(
+                "gurufocus_mcp_server_created",
+                resources=resource_count,
+                tools=tool_count,
+                server_name=_default_settings.server_name if _default_settings else "unknown",
+                server_version=_default_settings.server_version if _default_settings else "unknown",
+            )
+            yield {"client": client}
 
     # Create the MCP server with lifespan
     mcp = FastMCP(
@@ -106,17 +111,6 @@ def create_server(settings: MCPServerSettings | None = None) -> FastMCP:
     register_schema_tools(mcp)
     register_stock_resources(mcp)
     register_schema_resources(mcp)
-
-    # Count registered resources and tools
-    resource_count = len(mcp._resource_manager._templates) + len(mcp._resource_manager._resources)
-    tool_count = len(mcp._tool_manager._tools)
-    logger.info(
-        "gurufocus_mcp_server_created",
-        resources=resource_count,
-        tools=tool_count,
-        server_name=settings.server_name,
-        server_version=settings.server_version,
-    )
 
     return mcp
 

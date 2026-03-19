@@ -17,7 +17,9 @@ class TestMCPServerSettings:
         assert settings.api_timeout == 30.0
         assert settings.api_max_retries == 3
         assert settings.cache_enabled is True
-        assert settings.cache_dir == ".cache/gurufocus-mcp"
+        from pathlib import Path
+
+        assert settings.cache_dir == str(Path.home() / ".cache" / "gurufocus-mcp")
         assert settings.rate_limit_enabled is True
         assert settings.rate_limit_rpm == 30.0
         assert settings.rate_limit_daily == 0

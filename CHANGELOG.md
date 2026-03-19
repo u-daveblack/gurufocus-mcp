@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Upgraded FastMCP dependency from >=0.4 to >=3.0 (breaking internal API migration)
+- Cache directory default changed from relative to absolute path (~/.cache/gurufocus-mcp)
+- Server lifespan uses FastMCP 3.x yield-based state pattern
+- Context client access uses `ctx.lifespan_context` instead of `ctx.fastmcp.state`
+
 ## [v0.6.0] - 2026-01-06
 
 ### Added

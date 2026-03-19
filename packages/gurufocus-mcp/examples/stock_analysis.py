@@ -13,7 +13,7 @@ import asyncio
 import json
 import os
 
-from fastmcp.client import Client
+from fastmcp import Client
 
 from gurufocus_mcp import create_server
 from gurufocus_mcp.config import MCPServerSettings

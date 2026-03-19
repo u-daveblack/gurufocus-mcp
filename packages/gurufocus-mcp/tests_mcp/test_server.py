@@ -43,56 +43,63 @@ class TestCreateServer:
 class TestServerResources:
     """Tests for server resources registration."""
 
-    def test_server_has_resources_registered(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @pytest.mark.asyncio
+    async def test_server_has_resources_registered(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that server has resources registered."""
         monkeypatch.setenv("GURUFOCUS_API_TOKEN", "test-token")
 
         settings = MCPServerSettings(api_token="test-token")
         server = create_server(settings)
 
-        assert hasattr(server, "_resource_manager")
+        resources = await server.list_resources()
+        assert resources is not None
 
-    def test_server_has_schema_templates(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @pytest.mark.asyncio
+    async def test_server_has_schema_templates(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that server has schema resource templates."""
         monkeypatch.setenv("GURUFOCUS_API_TOKEN", "test-token")
 
         settings = MCPServerSettings(api_token="test-token")
         server = create_server(settings)
 
-        template_count = len(server._resource_manager._templates)
+        templates = await server.list_resource_templates()
         # 2 templates: get_schema, get_category_schemas
-        assert template_count == 2
+        assert len(templates) == 2
 
-    def test_server_has_schema_resources(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @pytest.mark.asyncio
+    async def test_server_has_schema_resources(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that server has schema static resources."""
         monkeypatch.setenv("GURUFOCUS_API_TOKEN", "test-token")
 
         settings = MCPServerSettings(api_token="test-token")
         server = create_server(settings)
 
-        resource_count = len(server._resource_manager._resources)
+        resources = await server.list_resources()
         # 1 static resource: list_all_schemas
-        assert resource_count == 1
+        assert len(resources) == 1
 
-    def test_server_has_get_stock_summary_tool(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @pytest.mark.asyncio
+    async def test_server_has_get_stock_summary_tool(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that server has get_stock_summary tool registered."""
         monkeypatch.setenv("GURUFOCUS_API_TOKEN", "test-token")
 
         settings = MCPServerSettings(api_token="test-token")
         server = create_server(settings)
 
-        tool_names = list(server._tool_manager._tools.keys())
+        tools = await server.list_tools()
+        tool_names = [t.name for t in tools]
         assert "get_stock_summary" in tool_names
 
-    def test_server_tool_count(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    @pytest.mark.asyncio
+    async def test_server_tool_count(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that server has exactly 54 tools registered (53 minus 2 disabled portfolio tools + 3 schema tools)."""
         monkeypatch.setenv("GURUFOCUS_API_TOKEN", "test-token")
 
         settings = MCPServerSettings(api_token="test-token")
         server = create_server(settings)
 
-        tool_count = len(server._tool_manager._tools)
-        assert tool_count == 54
+        tools = await server.list_tools()
+        assert len(tools) == 54
 
 
 class TestServerMain:
